@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 36,
     fontWeight: "bold",
-    color: "#448AFF",
+    color: "#2196F3",
     lineHeight: 38
   },
   logoBawah: {

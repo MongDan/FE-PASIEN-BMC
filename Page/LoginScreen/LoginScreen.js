@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   textBlock: { flexDirection: "column" },
   title: { fontSize: 22, fontWeight: "bold", color: "#000" },
-  subtitle: { fontSize: 22, fontWeight: "bold", color: "#448AFF" },
+  subtitle: { fontSize: 22, fontWeight: "bold", color: "#2196F3" },
 
   imageWrapper: {
     position: "absolute",
