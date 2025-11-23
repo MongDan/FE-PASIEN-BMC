@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-native'; // Hapus Navigate yang tidak terpakai
+import { useNavigate } from 'react-router-native'; 
 import {
   View,
   Text,
@@ -119,7 +119,7 @@ const getDjjStatus = (djj) => {
   if (value >= 110 && value <= 160) {
     return {
       text: 'Normal',
-      color: '#4CAF50', // HIJAU
+      color: '#4CAF50', 
       message: 'Detak jantung janin normal. Adek bayi sehat di dalam.',
     };
   }
@@ -127,7 +127,7 @@ const getDjjStatus = (djj) => {
   if (value < 110 || value > 160) {
     return {
       text: 'Gawat Janin',
-      color: '#F44336', // MERAH
+      color: '#F44336', 
       message: 'Detak jantung tidak stabil. Segera panggil Bidan/Dokter!',
     };
   }
@@ -505,11 +505,11 @@ const HeaderTop = ({ pasienName }) => (
   </View>
 );
 
-/* ===================== HEADER GRADIENT ===================== */
+
 
 const HeaderGradient = ({ pasienName }) => (
   <LinearGradient
-    colors={['#E1F5FE', '#ffffff']} // Gradien yang lebih lembut
+    colors={['#E1F5FE', '#ffffff']} 
     start={[0, 0]}
     end={[0, 1]}
     style={styles.headerGradient}
@@ -552,8 +552,6 @@ const MidwifeCard = ({ bidanName, activePhase, waktuCatat }) => (
   </View>
 );
 
-/* ===================== BOTTOM TAB BAR ===================== */
-
 const TabBarItem = ({ iconName, label, isFocused, onPress }) => (
   <TouchableOpacity
     style={styles.tabItem}
@@ -595,7 +593,6 @@ const BottomTabBar = ({ navigate }) => (
       iconName="book-open-page-variant"
       label="Edukasi"
       isFocused={false}
-      // PERBAIKAN: Menggunakan navigate ke path /edukasi
       onPress={() => navigate('/edukasi')} 
     />
 
@@ -608,8 +605,6 @@ const BottomTabBar = ({ navigate }) => (
   </View>
 );
 
-
-/* ===================== MAIN SCREEN (MODIFIED) ===================== */
 
 export default function MainScreen() {
   const [loading, setLoading] = useState(true);
@@ -703,7 +698,7 @@ const fetchPartografData = async (pasienId, token) => {
       setSistolik(cleanNumberString(latestData.sistolik));
       setDiastolik(cleanNumberString(latestData.diastolik));
       setNadi(cleanNumberString(latestData.nadi_ibu));
-      setSuhu(cleanNumberString(latestData.suhu_ibu, true)); // TRUE untuk desimal (suhu)
+      setSuhu(cleanNumberString(latestData.suhu_ibu, true)); 
 
       setWaktuCatat(latestData.waktu_catat || '---');
 
@@ -730,7 +725,6 @@ const fetchPartografData = async (pasienId, token) => {
       const token = await getTokenFromStorage();
       if (!token) {
         console.log('No token found, navigating to login'); 
-        // Tambahkan navigasi ke login jika tidak ada token
         navigate('/login');
         return;
       }
@@ -749,7 +743,7 @@ const fetchPartografData = async (pasienId, token) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [loading, refreshing, navigate]); // Tambahkan navigate ke dependencies
+  }, [loading, refreshing, navigate]); 
 
   useEffect(() => {
     fetchData();
@@ -824,12 +818,10 @@ const fetchPartografData = async (pasienId, token) => {
 /* ===================== STYLES ===================== */
 
 const styles = StyleSheet.create({
-  // CONTAINER UTAMA UNTUK LAYOUT FIXED
   containerFixed: {
     flex: 1,
-    backgroundColor: '#F5F5F5', // Latar belakang abu-abu muda
+    backgroundColor: '#F5F5F5', 
   },
-  // SCROLLVIEW UNTUK KONTEN DI ATAS TAB BAR
   scrollViewContent: {
     flex: 1,
     backgroundColor: '#F5F5F5',
@@ -919,7 +911,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
-  // Midwife Card Styles
   midwifeCardWrapper: {
     marginTop: -40,
     paddingHorizontal: 18,
@@ -1010,7 +1001,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  // Dilatation Visualizer Styles
   dilatationVisualizerContainer: {
     marginTop: 30,
     marginBottom: 30,
@@ -1086,7 +1076,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // DJJ & Ibu Status Card Styles
   sectionWrapper: {
     paddingHorizontal: 18,
     marginBottom: 30,
@@ -1125,12 +1114,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
   },
-    // Container untuk konten DJJ agar rata kiri
+
     djjContent: {
         alignItems: 'flex-start', 
         paddingLeft: 4,
     },
-    // Container khusus untuk nilai DJJ dan Unit BPM agar tetap inline
+
     djjValueContainer: {
         flexDirection: 'row',
         alignItems: 'baseline',
@@ -1153,7 +1142,6 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: 20,
   },
-  // Detail status Ibu (hanya muncul saat tidak normal)
   detailContainer: {
     marginTop: 15,
     paddingTop: 10,
@@ -1177,7 +1165,6 @@ const styles = StyleSheet.create({
     color: '#333',
   },
 
-  // Tab Bar Styles
   tabBarContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -1212,7 +1199,7 @@ const styles = StyleSheet.create({
 
   tabLabelFocused: {
     fontSize: 11,
-    color: '#03A9F4', // Biru Cerah
+    color: '#03A9F4', 
     fontWeight: '600',
     marginTop: 2,
   },

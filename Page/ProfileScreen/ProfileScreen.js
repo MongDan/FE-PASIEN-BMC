@@ -15,22 +15,19 @@ import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigate } from "react-router-native";
 
-// =================================================================
-// ✨ Warna dan Konstanta Desain (Diambil dari EdukasiScreen) ✨
-// =================================================================
+
 const COLORS = {
-  // Palet Biru dan Putih yang Bersih dan Menenangkan
-  primaryBlue: '#2196F3', // Biru standar yang cerah dan profesional
-  darkBlue: '#1976D2', // Biru yang lebih gelap untuk aksen kuat
-  lightBlue: '#E3F2FD', // Biru sangat terang, hampir putih, untuk latar belakang/aksen lembut
-  white: '#FFFFFF', // Putih murni
-  offWhite: '#F8F9FA', // Putih gading untuk latar belakang section
-  textPrimary: '#263238', // Abu-abu gelap, mudah dibaca
-  textSecondary: '#607D8B', // Abu-abu kebiruan untuk teks sekunder
-  accentSuccess: '#4CAF50', // Hijau untuk sukses (toast)
-  accentError: '#F44336', // Merah untuk error (toast)
-  shadow: 'rgba(0, 0, 0, 0.08)', // Bayangan sangat lembut
-  border: '#E0E0E0', // Garis batas tipis
+  primaryBlue: '#2196F3', 
+  darkBlue: '#1976D2', 
+  lightBlue: '#E3F2FD', 
+  white: '#FFFFFF', 
+  offWhite: '#F8F9FA',
+  textPrimary: '#263238', 
+  textSecondary: '#607D8B', 
+  accentSuccess: '#4CAF50', 
+  accentError: '#F44336', 
+  shadow: 'rgba(0, 0, 0, 0.08)', 
+  border: '#E0E0E0',
 };
 
 const SHADOW_STYLE = {
@@ -49,13 +46,12 @@ const initialProfileState = {
   umur: "N/A",
 };
 
-// ======================= KOMPONEN FOOTER =======================
+//  KOMPONEN FOOTER 
 const Footer = () => (
   <View style={styles.footer}>
     <Text style={styles.footerText}>© 2025 Ruang Bunda</Text>
   </View>
 );
-// ====================================================================
 
 export default function ProfileScreen({ style }) {
   const navigate = useNavigate();
@@ -275,7 +271,7 @@ export default function ProfileScreen({ style }) {
       <Ionicons
         name={iconName}
         size={20}
-        color={COLORS.primaryBlue} // Ikon warna biru primer
+        color={COLORS.primaryBlue} 
         style={styles.detailIconNew}
       />
       <View style={styles.detailTextContainerNew}>
@@ -382,7 +378,7 @@ export default function ProfileScreen({ style }) {
               {renderProfileDetailItem(
                 "location-outline",
                 "Alamat",
-                displayAlamat // Menggunakan alamat yang dipotong agar muat
+                displayAlamat 
               )}
                {/* Tambahkan kolom kosong agar tata letak 2 kolom tetap rapi jika ganjil */}
                <View style={styles.detailItemNew} /> 
@@ -397,7 +393,7 @@ export default function ProfileScreen({ style }) {
             "person-outline",
             "Ubah Username",
             () => {
-                setNewUsername(profileData.username); // Pastikan nilai modal terisi
+                setNewUsername(profileData.username); 
                 setUsernameModalVisible(true);
             },
             COLORS.textPrimary,
@@ -527,13 +523,13 @@ const styles = StyleSheet.create({
   // Container Utama
   fullScreenContainer: {
     flex: 1,
-    backgroundColor: COLORS.offWhite, // Background off-white konsisten
+    backgroundColor: COLORS.offWhite, 
   },
   container: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 20, // Padding di akhir scroll
+    paddingBottom: 20, 
   },
 
   // --- HEADER SECTION (Blue Theme) ---
@@ -567,14 +563,14 @@ const styles = StyleSheet.create({
     ...SHADOW_STYLE,
   },
   username: {
-    fontSize: 28, // Lebih besar dan berani
+    fontSize: 28,
     fontWeight: "bold",
     color: COLORS.white,
     marginTop: 5,
   },
   userSubtitle: {
     fontSize: 14,
-    color: COLORS.lightBlue, // Biru terang sebagai subtitle
+    color: COLORS.lightBlue, 
     marginTop: 2,
     fontWeight: '500',
   },
@@ -582,28 +578,27 @@ const styles = StyleSheet.create({
   // --- INFO CARD SECTION (Ringkas & Modern) ---
   infoCard: {
     marginHorizontal: 20,
-    marginTop: -40, // Tarik lebih ke atas
+    marginTop: -40, 
     backgroundColor: COLORS.white,
     borderRadius: 15,
     padding: 20,
-    marginBottom: 20, // Jarak ke menu
+    marginBottom: 20, 
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: COLORS.darkBlue, // Judul card biru tua
+    color: COLORS.darkBlue, 
     marginBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
     paddingBottom: 10,
   },
 
-  // Detail 2 Kolom
   detailListContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingTop: 5, // Jarak dari garis pembatas
+    paddingTop: 5, 
   },
   detailItemNew: {
     flexDirection: 'row',
@@ -629,7 +624,6 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  // --- MENU SECTION ---
   menuContainer: {
     marginHorizontal: 20,
     marginBottom: 0,
@@ -645,11 +639,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.white,
-    paddingVertical: 18, // Padding lebih besar
+    paddingVertical: 18, 
     paddingHorizontal: 20,
     borderRadius: 12,
-    marginBottom: 12, // Jarak antar item
-    // Shadow diimplementasikan langsung di renderMenuItem
+    marginBottom: 12, 
   },
   menuItemText: {
     flex: 1,
@@ -658,7 +651,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // --- FOOTER STYLES ---
   footer: {
     paddingVertical: 15,
     borderTopWidth: 1,
@@ -671,8 +663,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontWeight: '400',
   },
-
-  // --- MODAL STYLES ---
+ 
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -698,7 +689,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    backgroundColor: COLORS.offWhite, // Input background off-white
+    backgroundColor: COLORS.offWhite, 
     borderRadius: 10,
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -717,7 +708,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: COLORS.primaryBlue,
-    borderRadius: 30, // Lebih bulat
+    borderRadius: 30, 
     paddingVertical: 14,
     alignItems: "center",
     width: "100%",
@@ -732,7 +723,6 @@ const styles = StyleSheet.create({
     marginTop: 15,
     padding: 10,
     alignItems: 'center',
-    // Tidak ada border, hanya teks
   },
   cancelButtonText: {
     color: COLORS.textSecondary,
