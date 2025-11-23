@@ -315,7 +315,7 @@ export default function EdukasiScreen() {
                         >
                             <Icon name="chevron-back-outline" size={30} color={COLORS.primaryBlue} />
                         </TouchableOpacity>
-                        <Text style={styles.screenTitle}>Pusat Edukasi Bunda 💙</Text>
+                        <Text style={styles.screenTitle}>Edukasi Bunda 💙</Text>
                     </View>
 
                     <Text style={styles.screenSubtitle}>

@@ -9,10 +9,37 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigate } from "react-router-native";
+
+// =================================================================
+// ✨ Warna dan Konstanta Desain (Diambil dari EdukasiScreen) ✨
+// =================================================================
+const COLORS = {
+  // Palet Biru dan Putih yang Bersih dan Menenangkan
+  primaryBlue: '#2196F3', // Biru standar yang cerah dan profesional
+  darkBlue: '#1976D2', // Biru yang lebih gelap untuk aksen kuat
+  lightBlue: '#E3F2FD', // Biru sangat terang, hampir putih, untuk latar belakang/aksen lembut
+  white: '#FFFFFF', // Putih murni
+  offWhite: '#F8F9FA', // Putih gading untuk latar belakang section
+  textPrimary: '#263238', // Abu-abu gelap, mudah dibaca
+  textSecondary: '#607D8B', // Abu-abu kebiruan untuk teks sekunder
+  accentSuccess: '#4CAF50', // Hijau untuk sukses (toast)
+  accentError: '#F44336', // Merah untuk error (toast)
+  shadow: 'rgba(0, 0, 0, 0.08)', // Bayangan sangat lembut
+  border: '#E0E0E0', // Garis batas tipis
+};
+
+const SHADOW_STYLE = {
+  shadowColor: COLORS.shadow,
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.2,
+  shadowRadius: 6,
+  elevation: 6,
+};
 
 // Definisikan tipe data untuk state profile agar lebih jelas
 const initialProfileState = {
@@ -52,17 +79,19 @@ export default function ProfileScreen({ style }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isApiLoading, setIsApiLoading] = useState(false);
 
+  // MOCK FALLBACK (Pastikan hook tetap terpanggil)
+  const AppAsyncStorage = AsyncStorage || { getItem: async () => "mock-token" };
+
   // 🔹 Fungsi Kembali ke Home/Main Screen
   const handleGoBack = () => {
-    // Mengarahkan secara eksplisit ke rute Home/Dashboard.
-    navigate("/home", { replace: true });
+    navigate(-1); // Kembali ke rute sebelumnya (seperti di EdukasiScreen)
   };
 
   // 🔹 Load user data dari API
   const loadUserData = async () => {
     setIsPageLoading(true);
     try {
-      const token = await AsyncStorage.getItem("userToken");
+      const token = await AppAsyncStorage.getItem("userToken");
       setUserToken(token);
 
       if (!token) throw new Error("Token tidak ditemukan");
@@ -89,7 +118,7 @@ export default function ProfileScreen({ style }) {
       });
       setNewUsername(profile.username || ""); // Set untuk modal ubah username
 
-      await AsyncStorage.setItem("userName", profile.username || "");
+      await AppAsyncStorage.setItem("userName", profile.username || "");
     } catch (error) {
       console.log("Gagal memuat data profil:", error);
       Alert.alert("Error", "Gagal memuat data profil. Silakan coba lagi.");
@@ -113,7 +142,6 @@ export default function ProfileScreen({ style }) {
       Alert.alert("Error", "Password baru dan konfirmasi tidak cocok.");
       return;
     }
-    // Tambahkan validasi sederhana untuk password baru
     if (newPassword.length < 6) {
       Alert.alert("Error", "Password baru minimal 6 karakter.");
       return;
@@ -201,7 +229,7 @@ export default function ProfileScreen({ style }) {
         throw new Error(data.message || "Gagal mengubah username.");
       }
 
-      await AsyncStorage.setItem("userName", trimmedName);
+      await AppAsyncStorage.setItem("userName", trimmedName);
       setProfileData((prev) => ({ ...prev, username: trimmedName }));
       Alert.alert("Sukses", data.message || "Username berhasil diubah.");
       setUsernameModalVisible(false);
@@ -228,52 +256,52 @@ export default function ProfileScreen({ style }) {
         secureTextEntry={!showPassword}
         value={value}
         onChangeText={setValue}
-        placeholderTextColor="#999"
+        placeholderTextColor={COLORS.textSecondary}
         editable={!isApiLoading}
       />
-      <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+      <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
         <Ionicons
           name={showPassword ? "eye" : "eye-off"}
           size={20}
-          color="#777"
+          color={COLORS.textSecondary}
         />
       </TouchableOpacity>
     </View>
   );
 
-  // 🔹 Render item detail profil (misal: No. Reg, Alamat, Umur)
+  // 🔹 Render item detail profil (2 kolom ringkas)
   const renderProfileDetailItem = (iconName, label, value) => (
     <View style={styles.detailItemNew}>
       <Ionicons
         name={iconName}
         size={20}
-        color="#448AFF"
+        color={COLORS.primaryBlue} // Ikon warna biru primer
         style={styles.detailIconNew}
       />
       <View style={styles.detailTextContainerNew}>
         <Text style={styles.detailLabelNew}>{label}</Text>
-        <Text style={styles.detailValueNew}>{value}</Text>
+        <Text style={styles.detailValueNew} numberOfLines={1}>{value}</Text>
       </View>
     </View>
   );
 
-  // 🔹 Render item menu (misal: Ubah Username, Logout)
+  // 🔹 Render item menu (list item modern)
   const renderMenuItem = (
     iconName,
     text,
     onPress,
-    color = "#333",
-    iconColor = "#448AFF"
+    color = COLORS.textPrimary,
+    iconColor = COLORS.primaryBlue
   ) => (
     <TouchableOpacity
-      style={styles.menuItem}
+      style={[styles.menuItem, SHADOW_STYLE]} // Terapkan shadow di sini
       onPress={onPress}
-      disabled={isPageLoading || isApiLoading} // Menonaktifkan saat loading
+      disabled={isPageLoading || isApiLoading}
     >
       <Ionicons name={iconName} size={22} color={iconColor} />
       <Text style={[styles.menuItemText, { color }]}>{text}</Text>
       {iconName !== "log-out-outline" && (
-        <Ionicons name="chevron-forward-outline" size={22} color="#bdbdbd" />
+        <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textSecondary} />
       )}
     </TouchableOpacity>
   );
@@ -287,8 +315,7 @@ export default function ProfileScreen({ style }) {
         style: "destructive",
         onPress: async () => {
           try {
-            // Hapus semua data yang relevan
-            await AsyncStorage.multiRemove(["userToken", "userName"]);
+            await AppAsyncStorage.multiRemove(["userToken", "userName"]);
             navigate("/", { replace: true });
           } catch (error) {
             Alert.alert("Error", "Terjadi kesalahan saat logout.");
@@ -299,39 +326,47 @@ export default function ProfileScreen({ style }) {
   };
 
   // Pre-calculate Umur string safely
-  const displayUmur = profileData.umur === "N/A" 
-    ? "N/A" 
+  const displayUmur = profileData.umur === "N/A"
+    ? "N/A"
     : `${profileData.umur} Tahun`;
+  
+  // Pre-calculate Alamat untuk tata letak 2 kolom
+  const displayAlamat = profileData.alamat.length > 20
+    ? `${profileData.alamat.substring(0, 20)}...`
+    : profileData.alamat;
 
   return (
     <View style={styles.fullScreenContainer}>
-      <ScrollView style={[styles.container, style]}>
-        {/* Header Profile (dengan latar belakang yang lebih menarik) */}
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+        {/* Header Profile (dengan latar belakang biru konsisten) */}
         <View style={styles.profileHeader}>
-          {/* Tombol Kembali (panah kiri atas) */}
+          {/* Tombol Kembali */}
           <TouchableOpacity
             style={styles.backButton}
             onPress={handleGoBack}
           >
-            <Ionicons name="arrow-back-outline" size={28} color="#fff" />
+            <Ionicons name="chevron-back-outline" size={30} color={COLORS.white} />
           </TouchableOpacity>
 
           <View style={styles.headerContent}>
-            <FontAwesome name="user-circle" size={80} color="#fff" />
+            <View style={styles.profileIconContainer}>
+                <FontAwesome name="user-circle" size={60} color={COLORS.darkBlue} />
+            </View>
+            
             {isPageLoading ? (
-              <ActivityIndicator color="#fff" style={{ marginTop: 10 }} />
+              <ActivityIndicator color={COLORS.white} style={{ marginTop: 15 }} />
             ) : (
               <Text style={styles.username}>{profileData.username}</Text>
             )}
-            <Text style={styles.userSubtitle}>Akun Pengguna</Text>
+            <Text style={styles.userSubtitle}>Akun Bunda {profileData.no_reg}</Text>
           </View>
         </View>
 
-        {/* Detail Informasi Profil (Minimalis & Modern) */}
-        <View style={styles.infoCard}>
+        {/* Detail Informasi Profil (Minimalis & Modern - Menggunakan 2 Kolom) */}
+        <View style={[styles.infoCard, SHADOW_STYLE]}>
           <Text style={styles.cardTitle}>Detail Informasi</Text>
           {isPageLoading ? (
-            <ActivityIndicator color="#448AFF" style={{ paddingVertical: 10 }} />
+            <ActivityIndicator color={COLORS.primaryBlue} style={{ paddingVertical: 10 }} />
           ) : (
             <View style={styles.detailListContainer}>
               {renderProfileDetailItem(
@@ -342,46 +377,54 @@ export default function ProfileScreen({ style }) {
               {renderProfileDetailItem(
                 "calendar-outline",
                 "Umur",
-                displayUmur // Menggunakan string yang sudah dihitung
+                displayUmur
               )}
               {renderProfileDetailItem(
                 "location-outline",
                 "Alamat",
-                profileData.alamat
+                displayAlamat // Menggunakan alamat yang dipotong agar muat
               )}
+               {/* Tambahkan kolom kosong agar tata letak 2 kolom tetap rapi jika ganjil */}
+               <View style={styles.detailItemNew} /> 
             </View>
           )}
         </View>
 
-        {/* Menu Pengaturan Akun (Lebih ke Atas karena Card Detail lebih ringkas) */}
+        {/* Menu Pengaturan Akun (Lebih ke Tengah) */}
         <View style={styles.menuContainer}>
           <Text style={styles.menuTitle}>Pengaturan Akun</Text>
           {renderMenuItem(
             "person-outline",
             "Ubah Username",
-            () => setUsernameModalVisible(true)
+            () => {
+                setNewUsername(profileData.username); // Pastikan nilai modal terisi
+                setUsernameModalVisible(true);
+            },
+            COLORS.textPrimary,
+            COLORS.primaryBlue
           )}
           {renderMenuItem(
             "lock-closed-outline",
             "Ubah Password",
-            () => setPasswordModalVisible(true)
+            () => setPasswordModalVisible(true),
+            COLORS.textPrimary,
+            COLORS.primaryBlue
           )}
           {renderMenuItem(
             "log-out-outline",
             "Logout",
             handleLogout,
-            "#FF5252",
-            "#FF5252"
+            COLORS.accentError, // Warna merah untuk logout
+            COLORS.accentError // Ikon warna merah
           )}
         </View>
-        
-        {/* Padding tambahan untuk memastikan konten terpisah dari Footer */}
-        <View style={{ height: 20 }} /> 
+
+        <View style={{ height: 20 }} />
       </ScrollView>
-      
+
       {/* FOOTER DI LUAR SCROLLVIEW */}
       <Footer />
-      
+
       {/* Modal Username */}
       <Modal
         visible={usernameModalVisible}
@@ -399,7 +442,7 @@ export default function ProfileScreen({ style }) {
                 value={newUsername}
                 onChangeText={setNewUsername}
                 editable={!isApiLoading}
-                placeholderTextColor="#999"
+                placeholderTextColor={COLORS.textSecondary}
               />
             </View>
             <TouchableOpacity
@@ -408,7 +451,7 @@ export default function ProfileScreen({ style }) {
               disabled={isApiLoading}
             >
               {isApiLoading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={COLORS.white} />
               ) : (
                 <Text style={styles.saveButtonText}>Simpan Perubahan</Text>
               )}
@@ -461,7 +504,7 @@ export default function ProfileScreen({ style }) {
               disabled={isApiLoading}
             >
               {isApiLoading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={COLORS.white} />
               ) : (
                 <Text style={styles.saveButtonText}>Simpan Perubahan</Text>
               )}
@@ -484,82 +527,89 @@ const styles = StyleSheet.create({
   // Container Utama
   fullScreenContainer: {
     flex: 1,
-    backgroundColor: "#F2F3F5",
+    backgroundColor: COLORS.offWhite, // Background off-white konsisten
   },
   container: {
     flex: 1,
-    // background color sudah di handle oleh fullScreenContainer
+  },
+  scrollContent: {
+    paddingBottom: 20, // Padding di akhir scroll
   },
 
-  // --- HEADER SECTION ---
+  // --- HEADER SECTION (Blue Theme) ---
   profileHeader: {
-    // Simulasi Gradien Biru Muda ke Biru
-    backgroundColor: "#448AFF", // Warna dasar
-    paddingVertical: 40,
+    backgroundColor: COLORS.primaryBlue, // Solid blue (tanpa gradien)
+    paddingVertical: 50, // Padding lebih besar
     alignItems: "center",
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    overflow: "hidden", // Penting untuk tampilan rounded
+    overflow: "hidden",
+    paddingTop: Platform.OS === 'android' ? 70 : 50,
   },
   headerContent: {
     alignItems: "center",
   },
   backButton: {
     position: 'absolute',
-    top: 50, // Sesuaikan dengan ketinggian yang Anda inginkan
+    top: Platform.OS === 'android' ? 50 : 40,
     left: 20,
     zIndex: 10,
     padding: 5,
   },
+  profileIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.white, // Ikon dalam lingkaran putih
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    ...SHADOW_STYLE,
+  },
   username: {
-    fontSize: 24,
+    fontSize: 28, // Lebih besar dan berani
     fontWeight: "bold",
-    color: "#fff",
-    marginTop: 10,
+    color: COLORS.white,
+    marginTop: 5,
   },
   userSubtitle: {
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: COLORS.lightBlue, // Biru terang sebagai subtitle
     marginTop: 2,
+    fontWeight: '500',
   },
 
-  // --- INFO CARD SECTION (Minimalis & Modern) ---
+  // --- INFO CARD SECTION (Ringkas & Modern) ---
   infoCard: {
     marginHorizontal: 20,
-    marginTop: -30, // Tarik ke atas menutupi bagian bawah header
-    backgroundColor: "#fff",
+    marginTop: -40, // Tarik lebih ke atas
+    backgroundColor: COLORS.white,
     borderRadius: 15,
-    padding: 15,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    marginBottom: 10,
+    padding: 20,
+    marginBottom: 20, // Jarak ke menu
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: 15, // Dibuat sedikit lebih besar untuk pemisah yang jelas
+    color: COLORS.darkBlue, // Judul card biru tua
+    marginBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: COLORS.border,
     paddingBottom: 10,
   },
 
-  // Container baru untuk detail yang disusun secara flex (2 kolom minimalis)
+  // Detail 2 Kolom
   detailListContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    paddingTop: 5, // Jarak dari garis pembatas
   },
-
-  // Style baru untuk setiap item detail
   detailItemNew: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '48%', // Mengatur agar 2 item bisa berdampingan (48% + margin)
-    marginBottom: 15, // Jarak antar baris
+    width: '48%',
+    marginBottom: 15,
   },
   detailIconNew: {
     marginRight: 10,
@@ -569,91 +619,89 @@ const styles = StyleSheet.create({
   },
   detailLabelNew: {
     fontSize: 12,
-    color: "#999",
+    color: COLORS.textSecondary,
+    fontWeight: '500',
   },
   detailValueNew: {
-    fontSize: 14, // Dibuat sedikit lebih kecil agar lebih ringkas
-    color: "#333",
+    fontSize: 14,
+    color: COLORS.textPrimary,
     fontWeight: '600',
     marginTop: 1,
   },
 
   // --- MENU SECTION ---
   menuContainer: {
-    marginTop: 10,
     marginHorizontal: 20,
-    marginBottom: 0, // Dibuat 0 karena padding bawah ScrollView yang akan menampung footer
+    marginBottom: 0,
   },
   menuTitle: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#999",
+    color: COLORS.textSecondary,
     marginBottom: 10,
     textTransform: "uppercase",
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    paddingVertical: 15,
+    backgroundColor: COLORS.white,
+    paddingVertical: 18, // Padding lebih besar
     paddingHorizontal: 20,
     borderRadius: 12,
-    marginBottom: 10,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
+    marginBottom: 12, // Jarak antar item
+    // Shadow diimplementasikan langsung di renderMenuItem
   },
   menuItemText: {
     flex: 1,
     marginLeft: 15,
     fontSize: 16,
-    color: "#333",
+    fontWeight: '600',
   },
 
   // --- FOOTER STYLES ---
   footer: {
     paddingVertical: 15,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    backgroundColor: '#fff',
+    borderTopColor: COLORS.border,
+    backgroundColor: COLORS.white,
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    fontWeight: '400',
   },
 
   // --- MODAL STYLES ---
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.white,
     borderRadius: 15,
     padding: 25,
     width: "100%",
-    alignItems: "center",
+    ...SHADOW_STYLE,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
+    color: COLORS.darkBlue,
     marginBottom: 20,
+    textAlign: 'center',
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.offWhite, // Input background off-white
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#ccc", // Border yang lebih jelas
+    borderColor: COLORS.border,
     paddingHorizontal: 15,
     marginBottom: 15,
     height: 50,
@@ -662,27 +710,32 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     height: "100%",
-    color: "#333",
+    color: COLORS.textPrimary,
+  },
+  eyeIcon: {
+    padding: 5,
   },
   saveButton: {
-    backgroundColor: "#448AFF",
-    borderRadius: 25,
+    backgroundColor: COLORS.primaryBlue,
+    borderRadius: 30, // Lebih bulat
     paddingVertical: 14,
     alignItems: "center",
     width: "100%",
-    marginTop: 5,
+    marginTop: 10,
   },
   saveButtonText: {
-    color: "#fff",
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: "bold",
   },
   cancelButton: {
     marginTop: 15,
     padding: 10,
+    alignItems: 'center',
+    // Tidak ada border, hanya teks
   },
   cancelButtonText: {
-    color: "#FF5252",
+    color: COLORS.textSecondary,
     fontSize: 16,
     fontWeight: "500",
   },
