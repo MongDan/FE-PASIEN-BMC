@@ -15,16 +15,41 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Progress from 'react-native-progress';
 import {
-  AntDesign,
   Ionicons,
   MaterialCommunityIcons,
   FontAwesome,
-  MaterialIcons,
   Feather,
 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
+
+// =================================================================
+// ✨ Warna dan Konstanta Desain (Diambil dari file lain untuk KONSISTENSI) ✨
+// =================================================================
+const COLORS = {
+  primaryBlue: '#2196F3', 
+  darkBlue: '#1976D2', 
+  lightBlue: '#E3F2FD',
+  white: '#FFFFFF', 
+  offWhite: '#F8F9FA', 
+  textPrimary: '#263238', 
+  textSecondary: '#607D8B', 
+  accentSuccess: '#4CAF50',
+  accentError: '#F44336', 
+  accentWarning: '#FFA000', 
+  shadow: 'rgba(0, 0, 0, 0.08)', 
+  border: '#E0E0E0', 
+};
+
+const SHADOW_STYLE = {
+  shadowColor: COLORS.shadow,
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.2, 
+  shadowRadius: 6,
+  elevation: 6,
+};
+
 
 // Ganti URL API dengan URL yang sesuai
 const BASE_URL_PATIENT = 'https://restful-api-bmc-production.up.railway.app/api/pasien';
@@ -114,12 +139,12 @@ const extractTime = (dateTimeString) => {
  */
 const getDjjStatus = (djj) => {
   const value = parseFloat(djj);
-  if (isNaN(value) || value === 0) return { text: 'N/A', color: '#9E9E9E', message: 'Detak jantung janin tidak tersedia/belum dicatat.' };
+  if (isNaN(value) || value === 0) return { text: 'N/A', color: COLORS.textSecondary, message: 'Detak jantung janin tidak tersedia/belum dicatat.' };
 
   if (value >= 110 && value <= 160) {
     return {
       text: 'Normal',
-      color: '#4CAF50', 
+      color: COLORS.accentSuccess, 
       message: 'Detak jantung janin normal. Adek bayi sehat di dalam.',
     };
   }
@@ -127,12 +152,12 @@ const getDjjStatus = (djj) => {
   if (value < 110 || value > 160) {
     return {
       text: 'Gawat Janin',
-      color: '#F44336', 
+      color: COLORS.accentError, 
       message: 'Detak jantung tidak stabil. Segera panggil Bidan/Dokter!',
     };
   }
 
-  return { text: 'N/A', color: '#9E9E9E', message: 'Memuat data...' };
+  return { text: 'Memuat', color: COLORS.textSecondary, message: 'Memuat data...' };
 };
 
 const getDilatationPhase = (cm) => {
@@ -144,16 +169,13 @@ const getDilatationPhase = (cm) => {
 };
 
 /**
- * Mendapatkan status umum ibu (Tensi, Nadi, Suhu)
- */
-/**
  * Menghitung status kesehatan ibu berdasarkan data partograf terbaru.
  * Aturan Suhu: <35 Hipotermia, 35.0-37.5 Normal, >37.5 Demam.
  * @param {string} sistolik
  * @param {string} diastolik
  * @param {string} nadi_ibu
  * @param {string} suhu_ibu
- * @returns {object} { status, issues, detail }
+ * @returns {object} { status, color, message, issues, detail }
  */
 const getIbuStatus = (sistolik, diastolik, nadi_ibu, suhu_ibu) => {
     // Parsing nilai, menggunakan nama parameter baru (nadi_ibu, suhu_ibu)
@@ -169,71 +191,67 @@ const getIbuStatus = (sistolik, diastolik, nadi_ibu, suhu_ibu) => {
     if (isNaN(s) || isNaN(d) || isNaN(n) || isNaN(h)) {
         return {
             status: 'DATA BELUM LENGKAP',
-            color: '#BDBDBD',
+            color: COLORS.textSecondary, // Abu-abu untuk N/A
             message: 'Pastikan semua data tanda-tanda vital (TTV) terisi.',
             issues: ['Pastikan semua data tanda-tanda vital (TTV) terisi.'],
             detail: detail,
         };
     }
-
     // 2. Cek Suhu (MODIFIKASI LOGIKA SUHU: Normal 35.0 - 37.5)
     if (h > 37.5) {
         issues.push('Suhu tubuh tinggi (Demam)');
         detail['suhu'] = {
             icon: 'thermometer-high',
-            color: '#D32F2F', 
+            color: COLORS.accentError, 
             text: `Demam: Suhu ${h.toFixed(1)} °C`,
         };
     } else if (h < 35.0) {
         issues.push('Berpotensi Hipotermia');
         detail['suhu'] = {
             icon: 'thermometer-low',
-            color: '#1976D2', 
+            color: COLORS.darkBlue, // Biru tua untuk suhu rendah
             text: `Suhu Rendah: Suhu ${h.toFixed(1)} °C`,
         };
     }
-
     // 3. Cek Tekanan Darah
     if (s > 140 || d > 90) {
         issues.push('Hipertensi / Pre-eklampsia');
         detail['tensi'] = {
             icon: 'heart-pulse',
-            color: '#D32F2F',
+            color: COLORS.accentError,
             text: `Tensi Tinggi: ${s}/${d} mmHg`,
         };
     } else if (s < 90 || d < 60) {
         issues.push('Hipotensi');
         detail['tensi'] = {
             icon: 'heart-pulse',
-            color: '#1976D2',
+            color: COLORS.darkBlue,
             text: `Tensi Rendah: ${s}/${d} mmHg`,
         };
     }
-
     // 4. Cek Nadi
     if (n > 120) {
         issues.push('Takikardia (Nadi Cepat)');
         detail['nadi'] = {
             icon: 'pulse',
-            color: '#D32F2F',
+            color: COLORS.accentError,
             text: `Nadi Cepat: ${n} bpm`,
         };
     } else if (n < 50) {
         issues.push('Bradikardia (Nadi Lambat)');
         detail['nadi'] = {
             icon: 'pulse',
-            color: '#1976D2',
+            color: COLORS.darkBlue,
             text: `Nadi Lambat: ${n} bpm`,
         };
     }
-
     // 5. Penentuan Status Akhir
     if (issues.length > 0) {
         const isCritical = issues.some(i => i.includes('Hipertensi') || i.includes('Hipotensi') || i.includes('Takikardia') || i.includes('Demam'));
         return {
             status: isCritical ? 'PERLU WASPADA' : 'PERLU PERHATIAN',
-            color: isCritical ? '#D32F2F' : '#FFA000', // Merah atau Oranye
-            message: `Terdapat ${issues.length} potensi masalah: ${issues.join(', ')}.`,
+            color: isCritical ? COLORS.accentError : COLORS.accentWarning, // Merah atau Oranye
+            message: `Terdapat ${issues.length} potensi masalah: ${issues.join(', ')}. Segera hubungi Bidan Anda.`,
             issues: issues,
             detail: detail,
         };
@@ -241,8 +259,8 @@ const getIbuStatus = (sistolik, diastolik, nadi_ibu, suhu_ibu) => {
         // Jika semua TTV normal
         return {
             status: 'NORMAL',
-            color: '#4CAF50', // Hijau
-            message: 'Kondisi Tanda-tanda Vital Ibu Baik.',
+            color: COLORS.accentSuccess, // Hijau
+            message: 'Kondisi Tanda-tanda Vital Ibu Baik. Tetap jaga kesehatan.',
             issues: ['Kondisi Tanda-tanda Vital Ibu Baik.'],
             detail: detail,
         };
@@ -291,22 +309,31 @@ const getLatestFilledPartografData = (partografArray) => {
 
                 if (key === 'djj' || key === 'pembukaan_servik') {
                     const numValue = parseFloat(value);
-                    if (numValue <= 0 || isNaN(numValue)) continue;
+                    if (numValue < 0 || isNaN(numValue)) continue; 
                 }
 
                 if (key === 'suhu_ibu') {
                     const numValue = parseFloat(value);
-                    if (numValue <= 30.0 || isNaN(numValue)) continue; 
+                    if (numValue < 30.0 || isNaN(numValue)) continue; 
                 }
+                
+                // Khusus Pembukaan, jika nilainya "0" (asli dari DB) atau N/A, lanjutkan
+                if (key === 'pembukaan_servik') {
+                     const numValue = parseFloat(value);
+                     if (numValue === 0) continue; 
+                }
+
 
                 filledData[key] = value;
             }
         }
     }
-
+    
+    // Perbarui waktu catat dengan data terbaru, terlepas apakah field lain null
     if (sortedData.length > 0) {
         filledData['waktu_catat'] = sortedData[0]['waktu_catat'] || '---';
     }
+
 
     return filledData;
 };
@@ -315,23 +342,25 @@ const getLatestFilledPartografData = (partografArray) => {
 /* ===================== VISUALISASI PEMBUKAAN ===================== */
 
 const DILATATION_METAPHORS = [
-  { cm: 0, text: 'Pembukaan 0-3 cm', metaphor: 'Ujung Jari (Fase Laten)', caption: 'Jalan lahir masih dalam fase awal, Bunda bisa beristirahat.', progress: 0.1 },
-  { cm: 4, text: 'Pembukaan 4 cm', metaphor: 'Jeruk Nipis (Irisan)', caption: 'Jalan lahir mulai terbuka aktif. Semangat Bunda!', progress: 0.4 },
-  { cm: 5, text: 'Pembukaan 5 cm', metaphor: 'Buah Kiwi (Potongan Melintang)', caption: 'Hampir setengah jalan! Fokus pada pernapasan.', progress: 0.5 },
-  { cm: 6, text: 'Pembukaan 6 cm', metaphor: 'Kue Marie / Kuki', caption: 'Sudah setengah jalan! Tarik napas panjang.', progress: 0.6 },
-  { cm: 7, text: 'Pembukaan 7 cm', metaphor: 'Tomat Merah', caption: 'Tinggal sedikit lagi! Pertahankan energi Anda.', progress: 0.7 },
-  { cm: 8, text: 'Pembukaan 8 cm', metaphor: 'Jeruk Sunkist / Apel', caption: 'Pembukaan semakin cepat. Anda hebat!', progress: 0.8 },
-  { cm: 9, text: 'Pembukaan 9 cm', metaphor: 'Donat', caption: 'Sedikit lagi, hampir sempurna!', progress: 0.9 },
-  { cm: 10, text: 'Pembukaan 10 cm', metaphor: 'Kepala Bayi / Semangka Kecil', caption: 'Pembukaan Lengkap! Siap untuk mengejan sesuai aba-aba Bidan.', progress: 1.0 },
+  { cm: 0, text: 'Fase Laten', metaphor: 'Ujung Jari', caption: 'Jalan lahir masih dalam fase awal, Bunda bisa beristirahat.', progress: 0.1, icon: 'bed-outline' },
+  { cm: 4, text: 'Fase Aktif Awal', metaphor: 'Jeruk Nipis (Irisan)', caption: 'Pembukaan aktif dimulai. Fokus pada pernapasan.', progress: 0.4, icon: 'walk-outline' },
+  { cm: 5, text: 'Fase Aktif', metaphor: 'Buah Kiwi', caption: 'Hampir setengah jalan! Terus bergerak dan bernapas.', progress: 0.5, icon: 'hourglass-half-outline' },
+  { cm: 6, text: 'Fase Aktif Lanjut', metaphor: 'Kue Marie / Kuki', caption: 'Lebih dari setengah jalan! Pertahankan fokus dan energi.', progress: 0.6, icon: 'heart-circle-outline' },
+  { cm: 7, text: 'Fase Transisi', metaphor: 'Tomat Merah', caption: 'Masa transisi yang intens. Ingat tujuan Bunda!', progress: 0.7, icon: 'flash-outline' },
+  { cm: 8, text: 'Fase Transisi', metaphor: 'Jeruk Sunkist / Apel', caption: 'Pembukaan semakin cepat. Anda hebat!', progress: 0.8, icon: 'fast-food-outline' },
+  { cm: 9, text: 'Fase Transisi Akhir', metaphor: 'Donat', caption: 'Sedikit lagi, hampir sempurna!', progress: 0.9, icon: 'cloud-done-outline' },
+  { cm: 10, text: 'Kala II', metaphor: 'Kepala Bayi / Semangka Kecil', caption: 'Pembukaan Lengkap! Siap mengejan sesuai aba-aba Bidan.', progress: 1.0, icon: 'happy-outline' },
 ];
 
 /**
  * Komponen untuk menampilkan visualisasi pembukaan serviks berdasarkan cm.
  */
 const DilatationVisualizer = ({ pembukaan }) => {
-  // Pastikan pembukaan adalah string aman untuk menghindari error formatText di Progress.Circle
-  const dilatationString = cleanNumberString(pembukaan);
+  // Pastikan pembukaan adalah string aman
   const dilatation = parseFloat(pembukaan);
+  const dilatationString = (isNaN(dilatation) || dilatation < 0) ? '---' : dilatation.toFixed(1).replace('.0', '');
+  const displayCm = (isNaN(dilatation) || dilatation < 0) ? 'N/A' : `${dilatationString} cm`;
+
 
   let closestDilatation = DILATATION_METAPHORS[0];
 
@@ -345,34 +374,49 @@ const DilatationVisualizer = ({ pembukaan }) => {
     }
   }
 
-  const { text, metaphor, caption } = closestDilatation;
+  // Jika data tidak tersedia atau 0, gunakan metadata 0.
+  if (isNaN(dilatation) || dilatation <= 0) {
+      closestDilatation = DILATATION_METAPHORS[0];
+  }
+
+
+  const { text, metaphor, caption, icon } = closestDilatation;
   const progress = Math.min(dilatation / 10, 1);
   const size = width * 0.40;
+  const progressColor = (dilatation >= 10) ? COLORS.accentSuccess : COLORS.primaryBlue;
 
   return (
-    <View style={styles.dilatationVisualizerContainer}>
-      <Text style={styles.visualizerTitle}>Fase Persalinan</Text>
-      <Text style={styles.currentDilatationText}>{text} ({dilatationString} cm)</Text>
-      <View style={styles.visualizerContent}>
-        <View style={styles.visualizerLeft}>
-          <Progress.Circle
-            size={size}
-            progress={progress}
-            showsText={true}
-            color="#03A9F4"
-            thickness={size * 0.08}
-            unfilledColor="#E1F5FE"
-            formatText={() => `${dilatationString} cm`}
-            textStyle={styles.circleText}
-          />
-        </View>
+    <View style={styles.sectionWrapper}>
+      <Text style={styles.sectionTitle}>👶 Fase Persalinan Bayi</Text>
+      <View style={[styles.dilatationVisualizerContainer, SHADOW_STYLE]}>
+        
+        <View style={styles.visualizerContent}>
+          <View style={styles.visualizerLeft}>
+            <Progress.Circle
+              size={size}
+              progress={progress}
+              showsText={true}
+              color={progressColor}
+              thickness={size * 0.08}
+              unfilledColor={COLORS.lightBlue}
+              formatText={() => displayCm}
+              textStyle={styles.circleText}
+            />
+          </View>
 
-        <View style={styles.visualizerRight}>
-          <Text style={styles.metaphorLabel}>Visualisasi Ukuran:</Text>
-          <Text style={styles.metaphorText}>{metaphor}</Text>
-          <View style={styles.captionBox}>
-            <Ionicons name="sparkles" size={18} color="#03A9F4" />
-            <Text style={styles.captionText}>{caption}</Text>
+          <View style={styles.visualizerRight}>
+            <Text style={styles.metaphorLabel}>Tahap Saat Ini:</Text>
+            <Text style={styles.metaphorText}>{text}</Text>
+            
+            <View style={styles.stageNote}>
+                <Ionicons name={icon} size={18} color={COLORS.darkBlue} />
+                <Text style={styles.stageTextDetail}>{caption}</Text>
+            </View>
+
+            <View style={styles.metaphorBox}>
+              <Text style={styles.metaphorTitle}>Visualisasi Pembukaan</Text>
+              <Text style={styles.metaphorValue}>{metaphor}</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -384,34 +428,36 @@ const DilatationVisualizer = ({ pembukaan }) => {
 /* ===================== DJJ STATUS CARD ===================== */
 
 const DjjStatusCard = ({ djj, djjStatus }) => {
-  const isDanger = djjStatus.color === '#F44336';
-  const isNormal = djjStatus.color === '#4CAF50';
-  const backgroundColor = isDanger ? '#FFEBEE' : isNormal ? '#E8F5E9' : '#FFF3E0';
+  const isDanger = djjStatus.color === COLORS.accentError;
+  const isNormal = djjStatus.color === COLORS.accentSuccess;
+  const isNA = djjStatus.color === COLORS.textSecondary;
+  
+  const backgroundColor = isDanger ? COLORS.accentError + '10' : isNormal ? COLORS.accentSuccess + '10' : COLORS.offWhite;
   const borderColor = djjStatus.color;
-  const iconColor = isDanger ? '#F44336' : isNormal ? '#4CAF50' : '#FF9800';
+  const iconColor = djjStatus.color;
 
   return (
     <View style={styles.sectionWrapper}>
-      <Text style={styles.sectionTitle}>Status Detak Jantung Janin</Text>
-      <View style={[styles.djjCard, { backgroundColor, borderColor }]}>
+      <Text style={styles.sectionTitle}>🫀 Status Detak Jantung Janin</Text>
+      <View style={[styles.statusCard, { backgroundColor, borderColor }]}>
 
-        {/* Header (Status Normal/Gawat Janin) - PERBAIKAN: Rata Kiri */}
-        <View style={styles.djjHeader}>
+        {/* Header (Status Normal/Gawat Janin) */}
+        <View style={styles.statusHeader}>
           <Ionicons name="heart-circle" size={30} color={iconColor} />
-          <Text style={[styles.djjZoneTitle, { color: iconColor, marginLeft: 8 }]}>
+          <Text style={[styles.statusZoneTitle, { color: iconColor, marginLeft: 8 }]}>
             STATUS: {(djjStatus.text || '').toUpperCase()} 
           </Text>
         </View>
 
-        {/* Konten (Nilai dan Keterangan) - PERBAIKAN: Rata Kiri */}
-        <View style={styles.djjContent}>
-            <View style={styles.djjValueContainer}>
-                <Text style={styles.djjValue}>
+        {/* Konten (Nilai dan Keterangan) */}
+        <View style={styles.statusContent}>
+            <View style={styles.statusValueContainer}>
+                <Text style={styles.statusValue}>
                     {cleanNumberString(djj)}
                 </Text>
-                <Text style={styles.djjUnit}>bpm</Text>
+                <Text style={styles.statusUnit}>bpm</Text>
             </View>
-            <Text style={styles.djjMessage}>{djjStatus.message}</Text>
+            <Text style={[styles.statusMessage, isNA && {fontStyle: 'italic'}]}>{djjStatus.message}</Text>
         </View>
       </View>
     </View>
@@ -423,71 +469,95 @@ const DjjStatusCard = ({ djj, djjStatus }) => {
 
 const IbuStatusCard = ({ sistolik, diastolik, nadi, suhu }) => {
     const ibuStatus = getIbuStatus(sistolik, diastolik, nadi, suhu);
-    const isNormal = ibuStatus.color === '#4CAF50';
-    const backgroundColor = ibuStatus.color === '#BDBDBD' ? '#F5F5F5' : isNormal ? '#E8F5E9' : ibuStatus.color === '#FFA000' ? '#FFF3E0' : '#FFEBEE';
+    const isNormal = ibuStatus.color === COLORS.accentSuccess;
+    const isNA = ibuStatus.color === COLORS.textSecondary;
+    
+    const backgroundColor = isNA ? COLORS.offWhite : isNormal ? COLORS.accentSuccess + '10' : ibuStatus.color === COLORS.accentWarning ? COLORS.accentWarning + '10' : COLORS.accentError + '10';
     const borderColor = ibuStatus.color;
     const iconColor = ibuStatus.color;
     
-    // Nilai state sudah berupa string yang siap dirender
-    const tensiText = `${sistolik}/${diastolik} mmHg`;
-    const nadiText = `${nadi} bpm`;
-    const suhuText = `${suhu} °C`;
-
+    const tensiText = `${cleanNumberString(sistolik)}/${cleanNumberString(diastolik)} mmHg`;
+    const nadiText = `${cleanNumberString(nadi)} bpm`;
+    const suhuText = `${cleanNumberString(suhu, true)} °C`;
 
     return (
         <View style={styles.sectionWrapper}>
-            <Text style={styles.sectionTitle}>Status Kesehatan Ibu</Text>
-            <View style={[styles.ibuCard, { backgroundColor, borderColor }]}>
+            <Text style={styles.sectionTitle}>👩‍⚕️ Status Kesehatan Ibu</Text>
+            <View style={[styles.statusCard, { backgroundColor, borderColor }]}>
 
-                {/* Header (Kondisi: Normal/Perlu Perhatian) - PERBAIKAN: Rata Kiri */}
-                <View style={styles.djjHeader}>
+                {/* Header (Kondisi: Normal/Perlu Perhatian) */}
+                <View style={styles.statusHeader}>
                     <Ionicons name={isNormal ? "checkmark-circle" : "alert-circle"} size={30} color={iconColor} />
-                    <Text style={[styles.djjZoneTitle, { color: iconColor, marginLeft: 8 }]}>
+                    <Text style={[styles.statusZoneTitle, { color: iconColor, marginLeft: 8 }]}>
                         KONDISI: {(ibuStatus.status || 'N/A').toUpperCase()}
                     </Text>
                 </View>
 
-                <Text style={[styles.djjMessage, {marginTop: 4}]}>{ibuStatus.message}</Text>
+                <Text style={[styles.statusMessage, {marginTop: 4, marginBottom: 10}, isNA && {fontStyle: 'italic'}]}>{ibuStatus.message}</Text>
 
-                {/* Tampilkan detail hanya jika status TIDAK normal atau Belum Lengkap */}
-                {ibuStatus.status !== 'NORMAL' && (
-                    <View style={styles.detailContainer}>
-                        <Text style={styles.detailTitle}>Detail Data Vital (Dicatat Bidan):</Text>
-                        
-                        {/* Tensi */}
-                        <View style={styles.detailRow}>
-                            <Feather name="activity" size={16} color={ibuStatus.detail.tensi?.color || '#007bff'} />
-                            <Text style={styles.detailText}>Tensi: <Text style={{fontWeight: ibuStatus.detail.tensi ? 'bold' : 'normal'}}>{tensiText}</Text></Text>
-                        </View>
-                        
-                        {/* Nadi */}
-                        <View style={styles.detailRow}>
-                            <Ionicons name="pulse" size={16} color={ibuStatus.detail.nadi?.color || '#f44336'} />
-                            <Text style={styles.detailText}>Nadi: <Text style={{fontWeight: ibuStatus.detail.nadi ? 'bold' : 'normal'}}>{nadiText}</Text></Text>
-                        </View>
-                        
-                        {/* Suhu */}
-                        <View style={styles.detailRow}>
-                            <FontAwesome name="thermometer-half" size={16} color={ibuStatus.detail.suhu?.color || '#ff5722'} />
-                            <Text style={styles.detailText}>Suhu: <Text style={{fontWeight: ibuStatus.detail.suhu ? 'bold' : 'normal'}}>{suhuText}</Text></Text>
-                        </View>
-                    </View>
-                )}
+                {/* KONDISI BARU: Tampilkan detail TTV hanya jika status TIDAK NORMAL */}
+                {
+                  !isNormal && !isNA && (
+                      <View style={styles.detailContainer}>
+                          <Text style={styles.detailTitle}>Detail Masalah Tanda-tanda Vital:</Text>
+                          
+                          {/* Tensi */}
+                          <View style={styles.detailRow}>
+                              <Feather name="activity" size={16} color={ibuStatus.detail.tensi?.color || COLORS.primaryBlue} />
+                              <Text style={styles.detailText}>
+                                  Tensi: 
+                                  <Text style={{fontWeight: ibuStatus.detail.tensi ? 'bold' : 'normal', color: ibuStatus.detail.tensi?.color || COLORS.textPrimary}}>
+                                      {tensiText}
+                                  </Text>
+                              </Text>
+                          </View>
+                          
+                          {/* Nadi */}
+                          <View style={styles.detailRow}>
+                              <Ionicons name="pulse-outline" size={16} color={ibuStatus.detail.nadi?.color || COLORS.primaryBlue} />
+                              <Text style={styles.detailText}>
+                                  Nadi: 
+                                  <Text style={{fontWeight: ibuStatus.detail.nadi ? 'bold' : 'normal', color: ibuStatus.detail.nadi?.color || COLORS.textPrimary}}>
+                                      {nadiText}
+                                  </Text>
+                              </Text>
+                          </View>
+                          
+                          {/* Suhu */}
+                          <View style={styles.detailRow}>
+                              <FontAwesome name="thermometer-half" size={16} color={ibuStatus.detail.suhu?.color || COLORS.primaryBlue} />
+                              <Text style={styles.detailText}>
+                                  Suhu: 
+                                  <Text style={{fontWeight: ibuStatus.detail.suhu ? 'bold' : 'normal', color: ibuStatus.detail.suhu?.color || COLORS.textPrimary}}>
+                                      {suhuText}
+                                  </Text>
+                              </Text>
+                          </View>
+                      </View>
+                  )
+                }
+                
+                {
+                   isNA && (
+                      <View style={[styles.detailContainer, {borderTopWidth: 0, marginTop: 0}]}>
+                         <Text style={[styles.detailTitle, {fontStyle: 'italic'}]}>Data TTV terakhir (dicatat Bidan) tidak tersedia atau belum lengkap.</Text>
+                      </View>
+                   )
+                }
+                
+
             </View>
         </View>
     );
 };
-
-
 /* ===================== HEADER TOP ===================== */
-
-const HeaderTop = ({ pasienName }) => (
+const HeaderTop = () => (
   <View style={styles.headerTopContainer}>
     <View style={styles.headerLeft}>
       <MaterialCommunityIcons
         name="stethoscope"
-        size={50}
-        color="#03A9F4" // Biru yang lebih menonjol
+        size={40}
+        color={COLORS.darkBlue} 
         style={styles.logoStethoscope}
       />
       <View>
@@ -497,7 +567,7 @@ const HeaderTop = ({ pasienName }) => (
     </View>
 
     <TouchableOpacity style={styles.notificationButton}>
-      <Ionicons name="notifications-outline" size={26} color="black" />
+      <Ionicons name="notifications-outline" size={26} color={COLORS.textPrimary} />
       <View style={styles.badge}>
         <Text style={styles.badgeText}>2</Text>
       </View>
@@ -505,28 +575,26 @@ const HeaderTop = ({ pasienName }) => (
   </View>
 );
 
-
-
 const HeaderGradient = ({ pasienName }) => (
   <LinearGradient
-    colors={['#E1F5FE', '#ffffff']} 
+    colors={[COLORS.lightBlue, COLORS.white]} 
     start={[0, 0]}
     end={[0, 1]}
     style={styles.headerGradient}
   >
     <Text style={styles.haloText}>Halo, {pasienName}</Text>
+    <Text style={styles.welcomeSubtitle}>Selamat datang kembali di dashboard pemantauan persalinan.</Text>
   </LinearGradient>
 );
 
 /* ===================== MIDWIFE CARD ===================== */
-
 const MidwifeCard = ({ bidanName, activePhase, waktuCatat }) => (
   <View style={styles.midwifeCardWrapper}>
-    <View style={styles.midwifeCard}>
+    <View style={[styles.midwifeCard, SHADOW_STYLE]}>
       <View style={styles.midwifeRow}>
-        <FontAwesome name="user-circle" size={44} color="#007bff" />
-        <View style={{ marginLeft: 8, flex: 1 }}>
-          <Text style={styles.midwifeLabel}>Ditangani oleh</Text>
+        <FontAwesome name="user-circle" size={44} color={COLORS.primaryBlue} />
+        <View style={{ marginLeft: 12, flex: 1 }}>
+          <Text style={styles.midwifeLabel}>Ditangani oleh Bidan:</Text>
           <Text style={styles.midwifeName}>{bidanName}</Text>
         </View>
         <View style={styles.activeIndicatorContainer}>
@@ -535,44 +603,42 @@ const MidwifeCard = ({ bidanName, activePhase, waktuCatat }) => (
         </View>
       </View>
 
-      <View style={styles.stageNote}>
-        <Feather name="info" size={16} color="#007bff" />
+      <View style={styles.stageNoteMidwife}>
+        <Feather name="info" size={16} color={COLORS.darkBlue} />
         <Text style={styles.stageText}>
-          Anda sedang dalam tahap <Text style={styles.activePhaseTextBold}>{activePhase}</Text> persalinan
+          Anda dalam: <Text style={styles.activePhaseTextBold}>{activePhase}</Text>
         </Text>
       </View>
 
       <View style={styles.timeNote}>
-        <Feather name="clock" size={16} color="#333" />
+        <Feather name="clock" size={16} color={COLORS.textSecondary} />
         <Text style={styles.timeText}>
-          Data terakhir dicatat pada: <Text style={styles.timeBold}>{extractTime(waktuCatat)}</Text>
+          Data terakhir dicatat: <Text style={styles.timeBold}>{extractTime(waktuCatat)}</Text>
         </Text>
       </View>
     </View>
   </View>
 );
 
+/* ===================== BOTTOM TAB BAR ===================== */
 const TabBarItem = ({ iconName, label, isFocused, onPress }) => (
   <TouchableOpacity
     style={styles.tabItem}
     onPress={onPress}
   >
-    {isFocused ? (
-      <View style={{ alignItems: 'center' }}>
-        <MaterialCommunityIcons name={iconName} size={26} color="#03A9F4" />
-        <Text style={styles.tabLabelFocused}>{label}</Text>
-      </View>
-    ) : (
-      <View style={{ alignItems: 'center' }}>
-        <MaterialCommunityIcons name={iconName} size={26} color="#8e8e93" />
-        <Text style={styles.tabLabel}>{label}</Text>
-      </View>
-    )}
+    <View style={{ alignItems: 'center' }}>
+      <MaterialCommunityIcons 
+        name={iconName} 
+        size={26} 
+        color={isFocused ? COLORS.primaryBlue : COLORS.textSecondary} 
+      />
+      <Text style={isFocused ? styles.tabLabelFocused : styles.tabLabel}>{label}</Text>
+    </View>
   </TouchableOpacity>
 );
 
 const BottomTabBar = ({ navigate }) => (
-  <View style={styles.tabBarContainer}>
+  <View style={[styles.tabBarContainer, SHADOW_STYLE]}>
 
     <TabBarItem
       iconName="home"
@@ -581,7 +647,6 @@ const BottomTabBar = ({ navigate }) => (
       onPress={() => navigate('/home')}
     />
 
-    {/* PERUBAHAN DI SINI: navigate ke '/pesan' */}
     <TabBarItem
       iconName="message-text"
       label="Pesan"
@@ -605,7 +670,6 @@ const BottomTabBar = ({ navigate }) => (
   </View>
 );
 
-
 export default function MainScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -622,7 +686,7 @@ export default function MainScreen() {
 
   const [waktuCatat, setWaktuCatat] = useState('');
 
-  const [djjStatus, setDjjStatus] = useState({ text: '', color: '#9E9E9E', message: 'Memuat...' });
+  const [djjStatus, setDjjStatus] = useState({ text: 'Memuat', color: COLORS.textSecondary, message: 'Memuat...' });
   const navigate = useNavigate();
 
   const fetchBidanData = async (pasienId, token) => {
@@ -652,22 +716,24 @@ const fetchPartografData = async (pasienId, token) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Fungsi helper untuk reset state ke default/kosong
+      const resetPartografState = (message) => {
+          console.log(message);
+          setPembukaan(0);
+          setDjj(0);
+          setSistolik('---'); setDiastolik('---');
+          setNadi('---'); setSuhu('---');
+          setWaktuCatat('---');
+          setDjjStatus(getDjjStatus(0));
+      }
+
       if (!res.ok) {
         const errorJson = await res.json();
         const errorMessage = errorJson.message || 'Unknown error';
 
-        // Penanganan Error Khusus untuk Data Belum Ditemukan
         if (errorMessage.includes('Belum ada catatan partograf') || res.status === 404) {
-              // Log sebagai WARNING dan set state ke default, lalu return.
-            console.log('WARNING FETCH PARTOGRAF:', errorMessage);
-            
-            setPembukaan(0);
-            setDjj(0);
-            setSistolik('---'); setDiastolik('---');
-            setNadi('---'); setSuhu('---');
-            setWaktuCatat('---');
-            setDjjStatus(getDjjStatus(0));
-            return; 
+             resetPartografState('WARNING FETCH PARTOGRAF: Data partograf belum tersedia.');
+             return; 
         }
 
         throw new Error(`Partograf fetch failed: ${errorMessage}`);
@@ -677,23 +743,23 @@ const fetchPartografData = async (pasienId, token) => {
       const dataArray = json.data;
 
       if (!dataArray || dataArray.length === 0) {
-        setPembukaan(0);
-        setDjj(0);
-        setSistolik('---'); setDiastolik('---');
-        setNadi('---'); setSuhu('---');
-        setWaktuCatat('---');
-        setDjjStatus(getDjjStatus(0));
+        resetPartografState('WARNING FETCH PARTOGRAF: Data partograf kosong dari API.');
         return;
       }
 
       const latestData = getLatestFilledPartografData(dataArray);
 
       if (!latestData) {
-        throw new Error("Could not process latest Partograph data.");
+        resetPartografState("Could not process latest Partograph data.");
+        return;
       }
 
-      setPembukaan(parseFloat(latestData.pembukaan_servik) || 0);
-      setDjj(parseFloat(latestData.djj) || 0);
+      // Pastikan nilai dikonversi dengan benar, menggunakan nilai mentah jika '---' atau 'N/A'
+      const rawPembukaan = parseFloat(latestData.pembukaan_servik) || 0;
+      const rawDjj = parseFloat(latestData.djj) || 0;
+      
+      setPembukaan(rawPembukaan);
+      setDjj(rawDjj);
 
       setSistolik(cleanNumberString(latestData.sistolik));
       setDiastolik(cleanNumberString(latestData.diastolik));
@@ -702,7 +768,7 @@ const fetchPartografData = async (pasienId, token) => {
 
       setWaktuCatat(latestData.waktu_catat || '---');
 
-      setDjjStatus(getDjjStatus(latestData.djj));
+      setDjjStatus(getDjjStatus(rawDjj));
     } catch (err) {
       console.log('ERROR FETCH PARTOGRAF:', err.message);
       setPembukaan(0);
@@ -757,8 +823,8 @@ const fetchPartografData = async (pasienId, token) => {
   if (loading) {
     return (
       <View style={styles.loadingWrapper}>
-        <ActivityIndicator size="large" color="#03A9F4" />
-        <Text>Memuat data...</Text>
+        <ActivityIndicator size="large" color={COLORS.primaryBlue} />
+        <Text style={styles.loadingText}>Memuat data dashboard...</Text>
       </View>
     );
   }
@@ -770,21 +836,21 @@ const fetchPartografData = async (pasienId, token) => {
     <View style={styles.containerFixed}>
       <ScrollView
         style={styles.scrollViewContent}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#03A9F4"
-            colors={["#03A9F4"]}
+            tintColor={COLORS.primaryBlue}
+            colors={[COLORS.primaryBlue]}
           />
         }
       >
 
-        {/* HEADER ATAS */}
-        <HeaderTop pasienName={pasienName} />
+        {/* HEADER ATAS (LOGO & NOTIF) */}
+        <HeaderTop />
 
-        {/* GRADIENT */}
+        {/* GRADIENT & WELCOME */}
         <HeaderGradient pasienName={pasienName} />
 
         {/* CARD BIDAN */}
@@ -807,6 +873,8 @@ const fetchPartografData = async (pasienId, token) => {
             nadi={nadi}
             suhu={suhu}
         />
+        
+        <View style={{height: 20}} />
 
       </ScrollView>
 
@@ -814,38 +882,44 @@ const fetchPartografData = async (pasienId, token) => {
     </View>
   );
 }
-
 /* ===================== STYLES ===================== */
 
 const styles = StyleSheet.create({
   containerFixed: {
     flex: 1,
-    backgroundColor: '#F5F5F5', 
+    backgroundColor: COLORS.offWhite, 
   },
   scrollViewContent: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-    paddingBottom: 60,
+    backgroundColor: COLORS.offWhite,
   },
 
+  loadingWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: COLORS.textSecondary,
+    fontSize: 14,
+  },
   // Header Styles
   headerTopContainer: {
     paddingTop: Platform.OS === 'ios' ? 55 : 40,
     paddingBottom: 15,
     paddingHorizontal: 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 5,
+    ...SHADOW_STYLE, 
     marginBottom: 0,
+    zIndex: 10, 
   },
 
   headerLeft: {
@@ -858,73 +932,79 @@ const styles = StyleSheet.create({
   },
 
   logoTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#000',
-    lineHeight: 20,
+    color: COLORS.textPrimary,
+    lineHeight: 22,
   },
 
   logoTitleBlue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#03A9F4', 
-    lineHeight: 20,
+    color: COLORS.primaryBlue, 
+    lineHeight: 22,
   },
 
   notificationButton: {
     position: 'relative',
+    padding: 5,
   },
 
   badge: {
     position: 'absolute',
-    right: -6,
-    top: -4,
-    backgroundColor: '#F44336',
+    right: 0,
+    top: 0,
+    backgroundColor: COLORS.accentError,
     width: 18,
     height: 18,
     borderRadius: 9,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
 
   badgeText: {
-    color: 'white',
+    color: COLORS.white,
     fontSize: 10,
     fontWeight: 'bold',
   },
 
   headerGradient: {
-    paddingHorizontal: 0,
-    paddingVertical: 22,
-    paddingBottom: 60,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    paddingBottom: 50, 
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     marginBottom: 20,
-    marginTop: -10,
-    zIndex: -1,
+    marginTop: -10, 
+    zIndex: 1, 
   },
 
   haloText: {
-    fontSize: 19,
+    fontSize: 22,
     fontWeight: '600',
-    color: '#000',
-    paddingHorizontal: 20,
+    color: COLORS.textPrimary,
+  },
+  welcomeSubtitle: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: COLORS.textSecondary,
+    marginTop: 4,
   },
 
   midwifeCardWrapper: {
     marginTop: -40,
     paddingHorizontal: 18,
+    zIndex: 5, 
   },
 
   midwifeCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderRadius: 18,
     padding: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
 
   midwifeRow: {
@@ -934,55 +1014,56 @@ const styles = StyleSheet.create({
   },
 
   midwifeLabel: {
-    fontSize: 13,
-    color: '#777',
-      lineHeight: 18,
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
   },
 
   midwifeName: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
-    color: '#000',
-      lineHeight: 20,
+    color: COLORS.darkBlue,
+    lineHeight: 22,
   },
 
   activeIndicatorContainer: {
     alignItems: 'center',
+    marginLeft: 10,
   },
 
   activeIndicator: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.accentSuccess,
     marginTop: 2,
   },
 
   activeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: COLORS.accentSuccess,
   },
 
-  stageNote: {
+  stageNoteMidwife: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 14,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: COLORS.border,
   },
 
   stageText: {
-    marginLeft: 4,
-    color: '#555',
+    marginLeft: 8,
+    color: COLORS.textPrimary,
     fontSize: 14,
     lineHeight: 18,
   },
 
   activePhaseTextBold: {
     fontWeight: '700',
-    color: '#03A9F4',
+    color: COLORS.primaryBlue,
   },
 
   timeNote: {
@@ -991,49 +1072,38 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   timeText: {
-    marginLeft: 4,
-    color: '#777',
+    marginLeft: 8,
+    color: COLORS.textSecondary,
     fontSize: 12,
   },
   timeBold: {
     fontWeight: '700',
-    color: '#333',
+    color: COLORS.textPrimary,
     fontSize: 13,
   },
 
+  sectionWrapper: {
+    paddingHorizontal: 18,
+    marginBottom: 25,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 10,
+  },
+
   dilatationVisualizerContainer: {
-    marginTop: 30,
-    marginBottom: 30,
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     padding: 20,
-    borderRadius: 20,
-    marginHorizontal: 18,
-    shadowColor: '#03A9F4',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 5,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E1F5FE',
-  },
-  visualizerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#03A9F4',
-    marginBottom: 5,
-    textAlign: 'center',
-  },
-  currentDilatationText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 15,
+    borderColor: COLORS.lightBlue,
   },
   visualizerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     width: '100%',
   },
   visualizerLeft: {
@@ -1048,111 +1118,102 @@ const styles = StyleSheet.create({
   circleText: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#03A9F4',
+    color: COLORS.darkBlue,
   },
   metaphorLabel: {
-    fontSize: 14,
-    color: '#777',
+    fontSize: 13,
+    color: COLORS.textSecondary,
     marginBottom: 2,
+    fontWeight: '500',
   },
   metaphorText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
-    color: '#333',
+    color: COLORS.darkBlue,
     marginBottom: 10,
   },
-  captionBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#E1F5FE', 
-    padding: 12,
-    borderRadius: 12,
-  },
-  captionText: {
+  stageTextDetail: {
     marginLeft: 8,
     fontSize: 13,
-    color: '#004c8c',
+    color: COLORS.darkBlue,
     flexShrink: 1,
     lineHeight: 18,
   },
-
-  sectionWrapper: {
-    paddingHorizontal: 18,
-    marginBottom: 30,
+  metaphorBox: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
   },
-  sectionTitle: {
-    fontSize: 16,
+  metaphorTitle: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  metaphorValue: {
+    fontSize: 15,
     fontWeight: '700',
-    color: '#333',
-    marginBottom: 10,
+    color: COLORS.textPrimary,
+    marginTop: 2,
   },
-  djjCard: {
+
+  statusCard: {
     padding: 18,
     borderRadius: 18,
     borderWidth: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    borderColor: COLORS.border, 
+    ...SHADOW_STYLE,
   },
-  ibuCard: { 
-    padding: 18,
-    borderRadius: 18,
-    borderWidth: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  djjHeader: {
+  statusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 6,
   },
-  djjZoneTitle: {
+  statusZoneTitle: {
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
 
-    djjContent: {
+    statusContent: {
         alignItems: 'flex-start', 
         paddingLeft: 4,
     },
 
-    djjValueContainer: {
+    statusValueContainer: {
         flexDirection: 'row',
         alignItems: 'baseline',
         marginBottom: 2,
         marginTop: 4,
     },
-  djjValue: {
-    fontSize: 42,
+  statusValue: {
+    fontSize: 38,
     fontWeight: '900',
-    color: '#000',
+    color: COLORS.textPrimary,
   },
-  djjUnit: {
-    fontSize: 18,
+  statusUnit: {
+    fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginLeft: 4, // Sedikit jarak dari nilai angka
+    color: COLORS.textSecondary,
+    marginLeft: 4, 
   },
-  djjMessage: {
+  statusMessage: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.textPrimary,
     lineHeight: 20,
+    paddingLeft: 4,
   },
   detailContainer: {
     marginTop: 15,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: COLORS.border,
   },
   detailTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#555',
-    marginBottom: 5,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
   },
   detailRow: {
     flexDirection: 'row',
@@ -1162,8 +1223,9 @@ const styles = StyleSheet.create({
   detailText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#333',
+    color: COLORS.textPrimary,
   },
+
 
   tabBarContainer: {
     flexDirection: 'row',
@@ -1171,17 +1233,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: Platform.OS === 'ios' ? 90 : 60,
     paddingBottom: Platform.OS === 'ios' ? 20 : 0,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    elevation: 8,
+    borderTopColor: COLORS.border,
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    zIndex: 10,
   },
 
   tabItem: {
@@ -1193,21 +1252,14 @@ const styles = StyleSheet.create({
 
   tabLabel: {
     fontSize: 11,
-    color: '#8e8e93',
+    color: COLORS.textSecondary,
     marginTop: 2,
   },
 
   tabLabelFocused: {
     fontSize: 11,
-    color: '#03A9F4', 
+    color: COLORS.primaryBlue, 
     fontWeight: '600',
     marginTop: 2,
-  },
-
-  loadingWrapper: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
   },
 });
