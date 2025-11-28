@@ -38,7 +38,6 @@ const SHADOW_STYLE = {
   elevation: 6,
 };
 
-// Definisikan tipe data untuk state profile agar lebih jelas
 const initialProfileState = {
   username: "Memuat...",
   no_reg: "N/A",
@@ -46,7 +45,6 @@ const initialProfileState = {
   umur: "N/A",
 };
 
-//  KOMPONEN FOOTER 
 const Footer = () => (
   <View style={styles.footer}>
     <Text style={styles.footerText}>© 2025 Ruang Bunda</Text>
@@ -59,11 +57,9 @@ export default function ProfileScreen({ style }) {
   const [profileData, setProfileData] = useState(initialProfileState);
   const [userToken, setUserToken] = useState(null);
 
-  // Username Modal
   const [usernameModalVisible, setUsernameModalVisible] = useState(false);
   const [newUsername, setNewUsername] = useState("");
 
-  // Password Modal
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -75,15 +71,12 @@ export default function ProfileScreen({ style }) {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isApiLoading, setIsApiLoading] = useState(false);
 
-  // MOCK FALLBACK (Pastikan hook tetap terpanggil)
   const AppAsyncStorage = AsyncStorage || { getItem: async () => "mock-token" };
 
-  // 🔹 Fungsi Kembali ke Home/Main Screen
   const handleGoBack = () => {
-    navigate(-1); // Kembali ke rute sebelumnya (seperti di EdukasiScreen)
+    navigate(-1);
   };
 
-  // 🔹 Load user data dari API
   const loadUserData = async () => {
     setIsPageLoading(true);
     try {
@@ -105,14 +98,13 @@ export default function ProfileScreen({ style }) {
 
       const profile = data.data;
 
-      // Update state dengan data baru
       setProfileData({
         username: profile.username || "N/A",
         no_reg: profile.no_reg || "N/A",
         alamat: profile.alamat || "N/A",
-        umur: profile.umur ? String(profile.umur) : "N/A", // Pastikan umur berupa string
+        umur: profile.umur ? String(profile.umur) : "N/A", 
       });
-      setNewUsername(profile.username || ""); // Set untuk modal ubah username
+      setNewUsername(profile.username || ""); 
 
       await AppAsyncStorage.setItem("userName", profile.username || "");
     } catch (error) {
@@ -128,7 +120,6 @@ export default function ProfileScreen({ style }) {
     loadUserData();
   }, []);
 
-  // 🔹 Update Password
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       Alert.alert("Error", "Harap isi semua field password.");
@@ -172,7 +163,7 @@ export default function ProfileScreen({ style }) {
 
       Alert.alert("Sukses", data.message || "Password berhasil diubah.");
       setPasswordModalVisible(false);
-      // Reset semua field
+     
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -186,7 +177,6 @@ export default function ProfileScreen({ style }) {
     }
   };
 
-  // 🔹 Update Username
   const handleChangeUsername = async () => {
     const trimmedName = newUsername.trim();
     if (!trimmedName) {
@@ -237,7 +227,6 @@ export default function ProfileScreen({ style }) {
     }
   };
 
-  // 🔹 Render input password dengan toggle show/hide
   const renderPasswordInput = (
     value,
     setValue,
@@ -265,7 +254,6 @@ export default function ProfileScreen({ style }) {
     </View>
   );
 
-  // 🔹 Render item detail profil (2 kolom ringkas)
   const renderProfileDetailItem = (iconName, label, value) => (
     <View style={styles.detailItemNew}>
       <Ionicons
@@ -281,7 +269,6 @@ export default function ProfileScreen({ style }) {
     </View>
   );
 
-  // 🔹 Render item menu (list item modern)
   const renderMenuItem = (
     iconName,
     text,
@@ -290,7 +277,7 @@ export default function ProfileScreen({ style }) {
     iconColor = COLORS.primaryBlue
   ) => (
     <TouchableOpacity
-      style={[styles.menuItem, SHADOW_STYLE]} // Terapkan shadow di sini
+      style={[styles.menuItem, SHADOW_STYLE]} 
       onPress={onPress}
       disabled={isPageLoading || isApiLoading}
     >
@@ -302,7 +289,6 @@ export default function ProfileScreen({ style }) {
     </TouchableOpacity>
   );
 
-  // 🔹 Logout
   const handleLogout = async () => {
     Alert.alert("Logout", "Apakah Anda yakin ingin keluar?", [
       { text: "Tidak", style: "cancel" },
@@ -321,12 +307,10 @@ export default function ProfileScreen({ style }) {
     ]);
   };
 
-  // Pre-calculate Umur string safely
   const displayUmur = profileData.umur === "N/A"
     ? "N/A"
     : `${profileData.umur} Tahun`;
   
-  // Pre-calculate Alamat untuk tata letak 2 kolom
   const displayAlamat = profileData.alamat.length > 20
     ? `${profileData.alamat.substring(0, 20)}...`
     : profileData.alamat;
@@ -410,8 +394,8 @@ export default function ProfileScreen({ style }) {
             "log-out-outline",
             "Logout",
             handleLogout,
-            COLORS.accentError, // Warna merah untuk logout
-            COLORS.accentError // Ikon warna merah
+            COLORS.accentError, 
+            COLORS.accentError 
           )}
         </View>
 
@@ -520,7 +504,7 @@ export default function ProfileScreen({ style }) {
 }
 
 const styles = StyleSheet.create({
-  // Container Utama
+
   fullScreenContainer: {
     flex: 1,
     backgroundColor: COLORS.offWhite, 
@@ -532,10 +516,9 @@ const styles = StyleSheet.create({
     paddingBottom: 20, 
   },
 
-  // --- HEADER SECTION (Blue Theme) ---
   profileHeader: {
-    backgroundColor: COLORS.primaryBlue, // Solid blue (tanpa gradien)
-    paddingVertical: 50, // Padding lebih besar
+    backgroundColor: COLORS.primaryBlue, 
+    paddingVertical: 50, 
     alignItems: "center",
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
@@ -556,7 +539,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.white, // Ikon dalam lingkaran putih
+    backgroundColor: COLORS.white, 
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
@@ -575,7 +558,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // --- INFO CARD SECTION (Ringkas & Modern) ---
   infoCard: {
     marginHorizontal: 20,
     marginTop: -40, 

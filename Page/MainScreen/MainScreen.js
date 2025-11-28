@@ -9,7 +9,6 @@ import {
   RefreshControl,
 } from 'react-native';
 
-// Import komponen dan utils
 import { 
   COLORS, 
   BASE_URL_PATIENT, 

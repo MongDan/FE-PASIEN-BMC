@@ -13,12 +13,10 @@ import {
   Platform,
 } from "react-native";
 
-// --- MOCK LIBRARY UNTUK KOMPILASI DI WEB ---
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigate } from "react-router-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// MOCK FALLBACK
 const MockIonicons = ({ size, color }) => (
   <Text style={{ fontSize: size, color }}>Icon</Text>
 );
@@ -30,38 +28,34 @@ const MockAsyncStorage = { getItem: async () => "mock-token-12345" };
 
 const { width } = Dimensions.get("window");
 
-// =================================================================
-// ✨ Warna dan Konstanta Desain (Diambil dari EdukasiScreen) ✨
-// =================================================================
+
 const COLORS = {
-  // Palet Biru dan Putih yang Bersih dan Menenangkan
-  primaryBlue: '#2196F3', // Biru standar yang cerah dan profesional
-  darkBlue: '#1976D2', // Biru yang lebih gelap untuk aksen kuat
-  lightBlue: '#E3F2FD', // Biru sangat terang, hampir putih, untuk latar belakang/aksen lembut
-  white: '#FFFFFF', // Putih murni
-  offWhite: '#F8F9FA', // Putih gading untuk latar belakang section (latar belakang chat)
-  textPrimary: '#263238', // Abu-abu gelap, mudah dibaca
-  textSecondary: '#607D8B', // Abu-abu kebiruan untuk teks sekunder
-  accentSuccess: '#4CAF50', // Hijau untuk sukses (toast)
-  accentError: '#F44336', // Merah untuk error (toast)
-  shadow: 'rgba(0, 0, 0, 0.08)', // Bayangan sangat lembut
-  border: '#E0E0E0', // Garis batas tipis
+  
+  primaryBlue: '#2196F3', 
+  darkBlue: '#1976D2', 
+  lightBlue: '#E3F2FD', 
+  white: '#FFFFFF', 
+  offWhite: '#F8F9FA', 
+  textPrimary: '#263238', 
+  textSecondary: '#607D8B', 
+  accentSuccess: '#4CAF50', 
+  accentError: '#F44336',
+  shadow: 'rgba(0, 0, 0, 0.08)',
+  border: '#E0E0E0', 
 };
 
 const SHADOW_STYLE = {
   shadowColor: COLORS.shadow,
   shadowOffset: { width: 0, height: 3 },
-  shadowOpacity: 0.2, // Sedikit lebih terlihat untuk efek "melayang"
+  shadowOpacity: 0.2, 
   shadowRadius: 6,
   elevation: 6,
 };
 
-// ============================
-// CHAT BUBBLE COMPONENT (Diperbarui)
-// ============================
+
 const MessageBubble = ({ item }) => {
   const isPatient = item.isPatient;
-  const AppIonicons = Ionicons || MockIonicons; // Menggunakan Ionicons yang sudah di-mock
+  const AppIonicons = Ionicons || MockIonicons; 
 
   return (
     <View
@@ -97,23 +91,22 @@ const MessageBubble = ({ item }) => {
   );
 };
 
-// ============================
-// MAIN SCREEN (Diperbarui)
-// ============================
+
+
 export default function PesanScreen() {
-  // FIX: hook must always be called normally
+
   let navigate;
   try {
-    navigate = useNavigate(); // REAL HOOK (Expo / Native)
+    navigate = useNavigate(); 
   } catch {
     navigate = (path) =>
-      console.log("Mock navigate to:", path); // FALLBACK (Web compiler)
+      console.log("Mock navigate to:", path); 
   }
 
   const [pesanData, setPesanData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [noReg] = useState("BDN001"); // MOCK VALUE
-  const [bulan] = useState(33); // MOCK VALUE
+  const [noReg] = useState("BDN001"); 
+  const [bulan] = useState(33); 
   const [errorMessage, setErrorMessage] = useState("");
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -129,7 +122,7 @@ export default function PesanScreen() {
   // Auto scroll
   useEffect(() => {
     if (scrollViewRef.current) {
-      // Delay scroll sedikit agar bubble sempat di-render
+      
       setTimeout(() => {
         scrollViewRef.current.scrollToEnd({ animated: true });
       }, 100);
@@ -137,12 +130,10 @@ export default function PesanScreen() {
   }, [pesanData, isLoading]);
 
   const handleGoBack = () => {
-    navigate(-1); // Menggunakan -1 seperti di EdukasiScreen
+    navigate(-1); 
   };
 
-  // ============================
-  // FETCH PESAN
-  // ============================
+  
   const loadPesan = async () => {
     setIsLoading(true);
     setErrorMessage("");
@@ -150,7 +141,6 @@ export default function PesanScreen() {
     try {
       const token = await AppAsyncStorage.getItem("userToken");
 
-      // Menggunakan mock data API
       const res = await fetch(
         `https://restful-api-bmc-production.up.railway.app/api/pesan/${noReg}/${bulan}`,
         {
@@ -161,13 +151,9 @@ export default function PesanScreen() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Gagal memuat pesan");
 
-      // FIX: Logika pengiriman harus sesuai dengan data asli API. 
-      // isPatient = true (jika dari pasien), false (jika dari staf/bidan)
-      // Karena data API tidak jelas, kita gunakan logika mock bawaan, 
-      // tetapi akan diasumsikan staff: index % 3 === 0
       const dataWithSender = (data.data || []).map((item, index) => ({
         ...item,
-        // Dibuat lebih random (Staff (false) jika id ganjil, Pasien (true) jika id genap)
+
         isPatient: item.id % 2 === 0, 
         tanggal: new Date(
           Date.now() - index * 60000
@@ -191,9 +177,7 @@ export default function PesanScreen() {
     loadPesan();
   }, []);
 
-  // ============================
-  // KIRIM PESAN
-  // ============================
+  
   const handleKirimPesan = async () => {
     if (!pesanBaru.trim()) {
       AppAlert.alert("Info", "Pesan tidak boleh kosong.");
@@ -209,13 +193,13 @@ export default function PesanScreen() {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      isPatient: true, // Pesan baru selalu dari Pasien
-      id: Date.now() // Mock ID
+      isPatient: true, 
+      id: Date.now() 
     };
 
     setPesanData((p) => [...p, newSentMessage]);
     setModalVisible(false);
-    // setIsLoading(true); // Tidak perlu loading penuh, cukup tunggu sedikit.
+
 
     try {
       const token = await AppAsyncStorage.getItem("userToken");
@@ -238,23 +222,18 @@ export default function PesanScreen() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      // AppAlert.alert("Berhasil", data.message); // Tidak perlu alert setelah kirim
-      // Refresh data setelah berhasil kirim
       loadPesan(); 
 
     } catch (e) {
-      // Hapus pesan yang gagal dikirim
       setPesanData((p) => p.filter((msg) => msg.id !== newSentMessage.id)); 
       AppAlert.alert("Gagal Kirim", `Pesan tidak terkirim. ${e.message}`);
-      setModalVisible(true); // Buka kembali modal agar user bisa edit/coba lagi
+      setModalVisible(true); 
     } finally {
-      setIsLoading(false); // Pastikan loading state mati jika dinyalakan
+      setIsLoading(false); 
     }
   };
 
-  // ============================
-  // RENDER
-  // ============================
+
   return (
     <View style={styles.fullContainer}>
       {/* HEADER */}
@@ -316,7 +295,7 @@ export default function PesanScreen() {
         onPress={() => setModalVisible(true)}
       >
         <AppIonicons
-          name="add" // Icon lebih universal untuk aksi baru
+          name="add" 
           size={35}
           color={COLORS.white}
         />
@@ -345,7 +324,7 @@ export default function PesanScreen() {
                 style={styles.cancelButton}
                 onPress={() => {
                   setModalVisible(false);
-                  setPesanBaru(''); // Reset pesan jika dibatalkan
+                  setPesanBaru(''); 
                 }}
               >
                 <Text style={styles.cancelText}>Batal</Text>
@@ -367,9 +346,8 @@ export default function PesanScreen() {
   );
 }
 
-// =====================
-// STYLES (Diperbarui dengan konsistensi EdukasiScreen)
-// =====================
+
+// Style EdukasiScreen
 const styles = StyleSheet.create({
   fullContainer: { flex: 1, backgroundColor: COLORS.offWhite },
 
@@ -431,16 +409,15 @@ const styles = StyleSheet.create({
   },
   noData: { color: COLORS.textSecondary, textAlign: "center", marginTop: 10, fontSize: 15, paddingHorizontal: 20 },
 
-  // --- Chat Bubbles ---
   messageContainer: { flexDirection: "row", marginHorizontal: 10, marginBottom: 8 },
   patientContainer: { justifyContent: "flex-end" },
   staffContainer: { justifyContent: "flex-start" },
 
   messageBubble: {
-    paddingHorizontal: 15, // Padding horizontal lebih besar
+    paddingHorizontal: 15, 
     paddingVertical: 10,
     borderRadius: 15,
-    maxWidth: width * 0.8, // Maksimum lebih besar
+    maxWidth: width * 0.8, 
     borderBottomLeftRadius: 15,
     borderBottomRightRadius: 15,
   },
@@ -449,15 +426,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primaryBlue,
     marginLeft: 50,
     borderTopLeftRadius: 15,
-    borderTopRightRadius: 5, // Sudut lancip kecil untuk indikator pengirim
+    borderTopRightRadius: 5, 
   },
 
   staffBubble: {
-    backgroundColor: COLORS.white, // Staff bubble warna putih/lightBlue
+    backgroundColor: COLORS.white, 
     marginRight: 50,
-    borderTopLeftRadius: 5, // Sudut lancip kecil untuk indikator pengirim
+    borderTopLeftRadius: 5, 
     borderTopRightRadius: 15,
-    borderWidth: 1, // Border tipis untuk membedakan dari latar belakang
+    borderWidth: 1, 
     borderColor: COLORS.border,
   },
 
@@ -482,8 +459,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: COLORS.darkBlue, // Menggunakan darkBlue agar lebih menonjol
-    justifyContent: "center",
+    backgroundColor: COLORS.darkBlue, 
     alignItems: "center",
     zIndex: 10,
   },
@@ -491,8 +467,8 @@ const styles = StyleSheet.create({
   // --- Modal ---
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)", // Overlay sedikit lebih gelap
-    justifyContent: "flex-end", // Muncul dari bawah
+    backgroundColor: "rgba(0,0,0,0.5)", 
+    justifyContent: "flex-end", 
   },
 
   modalBox: {

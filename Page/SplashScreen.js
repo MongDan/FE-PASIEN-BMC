@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 90,
     resizeMode: "contain",
-    marginHorizontal: 15 // sedikit jarak antar logo saja
+    marginHorizontal: 15 
   },
   footerBar: {
     width: "100%",

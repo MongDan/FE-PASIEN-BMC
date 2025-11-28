@@ -19,35 +19,32 @@ import Icon from 'react-native-vector-icons/Ionicons';
 // URL API yang disediakan
 const API_URL = 'https://restful-api-bmc-production.up.railway.app/api/konten-edukasi';
 
-// =================================================================
-// ✨ Warna dan Konstanta Desain (Disesuaikan untuk Biru + Putih Minimalis) ✨
-// =================================================================
+// Pewarnaan
+
 const COLORS = {
-    // Palet Biru dan Putih yang Bersih dan Menenangkan
-    primaryBlue: '#2196F3', // Biru standar yang cerah dan profesional
-    darkBlue: '#1976D2', // Biru yang lebih gelap untuk aksen kuat
-    lightBlue: '#E3F2FD', // Biru sangat terang, hampir putih, untuk latar belakang/aksen lembut
-    white: '#FFFFFF', // Putih murni
-    offWhite: '#F8F9FA', // Putih gading untuk latar belakang section
-    textPrimary: '#263238', // Abu-abu gelap, mudah dibaca
-    textSecondary: '#607D8B', // Abu-abu kebiruan untuk teks sekunder
-    accentSuccess: '#4CAF50', // Hijau untuk sukses (toast)
-    accentError: '#F44336', // Merah untuk error (toast)
-    shadow: 'rgba(0, 0, 0, 0.08)', // Bayangan sangat lembut
-    border: '#E0E0E0', // Garis batas tipis
+   
+    primaryBlue: '#2196F3', 
+    darkBlue: '#1976D2', 
+    lightBlue: '#E3F2FD', 
+    white: '#FFFFFF', 
+    offWhite: '#F8F9FA', 
+    textPrimary: '#263238', 
+    textSecondary: '#607D8B', 
+    accentSuccess: '#4CAF50', 
+    accentError: '#F44336', 
+    shadow: 'rgba(0, 0, 0, 0.08)', 
+    border: '#E0E0E0', 
 };
 
 const SHADOW_STYLE = {
     shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2, // Sedikit lebih terlihat untuk efek "melayang"
+    shadowOpacity: 0.2, 
     shadowRadius: 6,
     elevation: 6,
 };
 
-// =================================================================
-//  Toast Notification (Disesuaikan warnanya)
-// =================================================================
+
 const Toast = ({ message, isVisible, onDismiss, type = 'error' }) => {
     const fadeAnim = new Animated.Value(0);
 
@@ -84,9 +81,7 @@ const Toast = ({ message, isVisible, onDismiss, type = 'error' }) => {
     );
 };
 
-// =================================================================
-//  Content Formatter (Disempurnakan untuk gaya minimalis)
-// =================================================================
+
 const FormattedContent = ({ content }) => {
     const paragraphs = content.split('\n\n').filter(p => p.trim() !== '');
 
@@ -94,7 +89,6 @@ const FormattedContent = ({ content }) => {
         const trimmedLine = line.trim();
         const parts = trimmedLine.split(/(\*\*.*?\*\*)/g).filter(Boolean);
 
-        // 1. Cek apakah ini daftar (misalnya, dimulai dengan '-' atau '*')
         if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
             return (
                 <View key={key} style={styles.listItem}>
@@ -108,7 +102,7 @@ const FormattedContent = ({ content }) => {
                                     </Text>
                                 );
                             }
-                            // Hapus bullet point dari teks item
+                            
                             const textPart = i === 0 && (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* '))
                                 ? part.substring(2)
                                 : part;
@@ -119,7 +113,6 @@ const FormattedContent = ({ content }) => {
             );
         }
 
-        // 2. Jika bukan daftar, render sebagai paragraf biasa
         return (
             <Text key={key} style={styles.contentParagraph}>
                 {parts.map((part, i) => {
@@ -148,9 +141,7 @@ const FormattedContent = ({ content }) => {
     );
 };
 
-// =================================================================
-//  Main Screen (Diperbarui dengan gaya Biru + Putih)
-// =================================================================
+
 export default function EdukasiScreen() {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
@@ -380,17 +371,15 @@ export default function EdukasiScreen() {
     return selectedContent ? renderContentDetail() : renderContentList();
 }
 
-// =================================================================
-//  Styles (Diperbarui dengan gaya Biru + Putih Minimalis)
-// =================================================================
+
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.offWhite, // Latar belakang off-white
+        backgroundColor: COLORS.offWhite, 
     },
-    // --- Global Center Styles ---
+
     center: {
         flex: 1,
         justifyContent: 'center',
@@ -466,7 +455,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.white,
         ...SHADOW_STYLE,
         marginBottom: 15,
-        borderBottomLeftRadius: 15, // Sudut sedikit melengkung
+        borderBottomLeftRadius: 15, 
         borderBottomRightRadius: 15,
     },
     listHeaderRow: {
@@ -481,7 +470,7 @@ const styles = StyleSheet.create({
     screenTitle: {
         fontSize: 26,
         fontWeight: '800',
-        color: COLORS.darkBlue, // Menggunakan darkBlue untuk judul utama
+        color: COLORS.darkBlue, 
         flex: 1,
     },
     screenSubtitle: {
@@ -498,23 +487,23 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
 
-    // --- Card (Desain Minimalis Modern) ---
+
     card: {
         backgroundColor: COLORS.white,
         padding: 18,
-        borderRadius: 12, // Lebih halus
+        borderRadius: 12, 
         marginVertical: 8,
         flexDirection: 'row',
         alignItems: 'center',
         ...SHADOW_STYLE,
-        borderLeftWidth: 4, // Aksen garis biru
+        borderLeftWidth: 4,
         borderLeftColor: COLORS.primaryBlue,
     },
     cardIconCircle: {
-        width: 48, // Sedikit lebih besar
+        width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: COLORS.lightBlue, // Biru terang untuk latar belakang ikon
+        backgroundColor: COLORS.lightBlue, 
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
@@ -535,7 +524,6 @@ const styles = StyleSheet.create({
         fontWeight: '400',
     },
 
-    // --- Detail Screen ---
     detailHeader: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -560,34 +548,33 @@ const styles = StyleSheet.create({
     detailScrollView: { flex: 1 },
     detailContentPadding: { padding: 20 },
 
-    // --- Detail Content Styles ---
     categoryLabel: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: COLORS.primaryBlue,
-        paddingHorizontal: 12, // Lebih lebar
-        paddingVertical: 6, // Lebih tinggi
-        borderRadius: 20, // Lebih bulat
+        paddingHorizontal: 12, 
+        paddingVertical: 6, 
+        borderRadius: 20, 
         alignSelf: 'flex-start',
         marginBottom: 15,
-        ...SHADOW_STYLE, // Tambah shadow untuk menonjolkan
+        ...SHADOW_STYLE, 
     },
     categoryText: {
-        marginLeft: 8, // Jarak lebih
+        marginLeft: 8, 
         color: COLORS.white,
-        fontSize: 14, // Lebih besar
+        fontSize: 14, 
         fontWeight: '600',
     },
     separator: {
         height: 1,
-        backgroundColor: COLORS.border, // Warna border
+        backgroundColor: COLORS.border, 
         marginBottom: 20,
-        marginTop: 5, // Jarak sedikit
+        marginTop: 5, 
     },
     sectionHeading: {
         fontSize: 24,
         fontWeight: '800',
-        color: COLORS.darkBlue, // Judul section lebih menonjol
+        color: COLORS.darkBlue, 
         marginBottom: 15,
     },
     contentContainer: { marginBottom: 20 },
@@ -595,15 +582,15 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: COLORS.textPrimary,
         marginBottom: 15,
-        lineHeight: 25, // Line height lebih nyaman
+        lineHeight: 25, 
         textAlign: 'justify',
     },
     contentBold: {
         fontWeight: 'bold',
-        color: COLORS.darkBlue, // Bold dengan dark blue
+        color: COLORS.darkBlue,
     },
 
-    // List item (Poin-poin)
+
     listItem: {
         flexDirection: 'row',
         alignItems: 'flex-start',
@@ -622,16 +609,16 @@ const styles = StyleSheet.create({
         textAlign: 'justify',
     },
 
-    // Catatan Kaki Detail
+
     footerInfo: {
         marginTop: 30,
-        padding: 18, // Padding lebih besar
-        backgroundColor: COLORS.lightBlue, // Latar belakang biru terang
+        padding: 18, 
+        backgroundColor: COLORS.lightBlue, 
         borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'flex-start',
-        borderLeftWidth: 5, // Border kiri lebih tebal
-        borderLeftColor: COLORS.darkBlue, // Warna biru tua
+        borderLeftWidth: 5, 
+        borderLeftColor: COLORS.darkBlue, 
         ...SHADOW_STYLE,
     },
     footerText: {
@@ -643,7 +630,6 @@ const styles = StyleSheet.create({
         lineHeight: 22,
     },
 
-    // --- Footer Hak Cipta ---
     copyrightFooter: {
         paddingVertical: 20,
         alignItems: 'center',
