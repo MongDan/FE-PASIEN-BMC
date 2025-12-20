@@ -10,33 +10,23 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  Modal, // Tambah Modal
+  Modal,
 } from "react-native";
-import { FontAwesome, Ionicons } from "@expo/vector-icons"; // Tambah Ionicons
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useNavigate } from "react-router-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BlurView } from "expo-blur"; // Pastikan ini sudah terinstal
 
-// --- KOMPONEN ALERT MODERN (Re-usable dalam file ini) ---
 const CustomAlert = ({ visible, title, message, type, onClose }) => {
   const isError = type === "error";
   const iconName = isError ? "close-circle" : "information-circle";
   const iconColor = isError ? "#F44336" : "#2196F3";
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
-          <Ionicons
-            name={iconName}
-            size={60}
-            color={iconColor}
-            style={{ marginBottom: 10 }}
-          />
+          <Ionicons name={iconName} size={60} color={iconColor} style={{ marginBottom: 10 }} />
           <Text style={styles.modalTitle}>{title}</Text>
           <Text style={styles.modalMessage}>{message}</Text>
           <TouchableOpacity
@@ -57,99 +47,50 @@ export default function LoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
   const [showSuccess, setShowSuccess] = useState(false);
-
-  // State untuk Custom Alert
-  const [alertConfig, setAlertConfig] = useState({
-    visible: false,
-    title: "",
-    message: "",
-    type: "info",
-  });
+  const [alertConfig, setAlertConfig] = useState({ visible: false, title: "", message: "", type: "info" });
 
   const navigate = useNavigate();
 
-  // Helper untuk memanggil alert
   const showAlert = (title, message, type = "info") => {
     setAlertConfig({ visible: true, title, message, type });
   };
 
-  const closeAlert = () => {
-    setAlertConfig({ ...alertConfig, visible: false });
-  };
-
   const handleLogin = async () => {
     if (!username || !password) {
-      // GANTI alert() BIASA
-      showAlert(
-        "Data Belum Lengkap",
-        "Username dan Password tidak boleh kosong.",
-        "error"
-      );
+      showAlert("Data Belum Lengkap", "Username dan Password tidak boleh kosong.", "error");
       return;
     }
-
     setIsLoading(true);
-
     try {
-      const response = await fetch(
-        `https://restful-api-bmc-production-v2.up.railway.app/api/login-pasien`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({ username, password }),
-        }
-      );
-
+      const response = await fetch(`https://restful-api-bmc-production-v2.up.railway.app/api/login-pasien`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Username atau Password salah.");
-      }
-
+      if (!response.ok) throw new Error(data.message || "Username atau Password salah.");
+      
       setIsLoading(false);
-
-      if (data.token) {
-        await AsyncStorage.setItem("userToken", data.token);
-        console.log("Token berhasil disimpan!");
-      } else {
-        throw new Error("Token tidak ada di server.");
-      }
-
+      if (data.token) await AsyncStorage.setItem("userToken", data.token);
       setShowSuccess(true);
-
-      setTimeout(() => {
-        setShowSuccess(false);
-        navigate("/home");
-      }, 1500);
+      setTimeout(() => { setShowSuccess(false); navigate("/home"); }, 1500);
     } catch (error) {
       setIsLoading(false);
-      // GANTI alert() BIASA
       showAlert("Gagal Masuk", error.message, "error");
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      {/* --- CUSTOM ALERT --- */}
-      <CustomAlert
-        visible={alertConfig.visible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={closeAlert}
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <CustomAlert 
+        visible={alertConfig.visible} 
+        title={alertConfig.title} 
+        message={alertConfig.message} 
+        type={alertConfig.type} 
+        onClose={() => setAlertConfig({ ...alertConfig, visible: false })} 
       />
 
-      {/* ============================ */}
-      {/* POPUP SUKSES           */}
-      {/* ============================ */}
       {showSuccess && (
         <View style={styles.successOverlay}>
           <View style={styles.successBox}>
@@ -159,9 +100,7 @@ export default function LoginScreen() {
         </View>
       )}
 
-      {/* ============================ */}
-      {/* HEADER            */}
-      {/* ============================ */}
+      {/* Header Tetap Di Atas */}
       <View style={styles.header}>
         <Image source={require("../../assets/Logo.png")} style={styles.logo} />
         <View style={styles.textBlock}>
@@ -170,253 +109,97 @@ export default function LoginScreen() {
         </View>
       </View>
 
-      {/* IMAGE ATAS */}
+      {/* Gambar Latar */}
       <View style={styles.imageWrapper}>
-        <Image
-          source={require("../../assets/Dokter.png")}
-          style={styles.doctorImage}
-        />
+        <Image source={require("../../assets/ibu-hamil.png")} style={styles.doctorImage} />
       </View>
 
-      {/* FORM */}
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.loginCard}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        {/* GUNAKAN BLURVIEW DISINI */}
+        <BlurView intensity={80} tint="light" style={styles.loginCard}>
           <Text style={styles.loginTitle}>Login</Text>
 
-          {/* USERNAME */}
           <Text style={styles.label}>Username:</Text>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Enter your username"
-              placeholderTextColor="#ccc"
-              returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current?.focus()}
-              blurOnSubmit={false}
+              placeholder="Username"
+              placeholderTextColor="#ddd"
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
             />
-            <FontAwesome
-              name="user"
-              size={20}
-              color="#fff"
-              style={styles.icon}
-            />
+            <FontAwesome name="user" size={18} color="#fff" />
           </View>
 
-          {/* PASSWORD */}
           <Text style={styles.label}>Password:</Text>
           <View style={styles.inputContainer}>
             <TextInput
               ref={passwordRef}
               style={styles.input}
-              placeholder="Enter your password"
-              placeholderTextColor="#ccc"
+              placeholder="Password"
+              placeholderTextColor="#ddd"
               secureTextEntry={!showPassword}
               value={password}
               onChangeText={setPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <FontAwesome
-                name={showPassword ? "eye-slash" : "eye"}
-                size={20}
-                color="#fff"
-                style={styles.icon}
-              />
+              <FontAwesome name={showPassword ? "eye-slash" : "eye"} size={18} color="#fff" />
             </TouchableOpacity>
           </View>
 
-          {/* LOGIN BUTTON */}
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
-            )}
+          <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
+            {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.loginButtonText}>Login</Text>}
           </TouchableOpacity>
-        </View>
+        </BlurView>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9F6F2",
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-
-  // STYLES ALERT & MODAL
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    width: "80%",
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 25,
-    alignItems: "center",
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    marginTop: 10,
-    textAlign: "center",
-  },
-  modalMessage: {
-    fontSize: 15,
-    color: "#666",
-    textAlign: "center",
-    marginVertical: 15,
-    lineHeight: 22,
-  },
-  modalButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    width: "100%",
-    alignItems: "center",
-  },
-  modalButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-
-  // STYLES LAMA (TIDAK DIUBAH)
-  successOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 999,
-  },
-  successBox: {
-    width: 260,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    paddingVertical: 25,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    elevation: 8,
-  },
-  successTitle: {
-    marginTop: 10,
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 50,
-    marginLeft: 20,
-    marginBottom: 10,
-    alignSelf: "flex-start",
-  },
-  logo: {
-    width: 55,
-    height: 55,
-    resizeMode: "contain",
-    marginRight: 6,
-  },
+  container: { flex: 1, backgroundColor: "#F9F6F2" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" },
+  modalContainer: { width: "80%", backgroundColor: "white", borderRadius: 20, padding: 25, alignItems: "center" },
+  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#333", marginTop: 10 },
+  modalMessage: { fontSize: 15, color: "#666", textAlign: "center", marginVertical: 15 },
+  modalButton: { paddingVertical: 12, paddingHorizontal: 30, borderRadius: 25, width: "100%", alignItems: "center" },
+  modalButtonText: { color: "white", fontWeight: "bold" },
+  successOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "center", alignItems: "center", zIndex: 1000 },
+  successBox: { width: 250, backgroundColor: "#fff", borderRadius: 20, padding: 25, alignItems: "center" },
+  successTitle: { marginTop: 10, fontSize: 18, fontWeight: "bold" },
+  header: { flexDirection: "row", alignItems: "center", marginTop: 50, marginLeft: 20, position: 'absolute', top: 0, zIndex: 20 },
+  logo: { width: 50, height: 50, marginRight: 8 },
   textBlock: { flexDirection: "column" },
-  title: { fontSize: 22, fontWeight: "bold", color: "#000" },
-  subtitle: { fontSize: 22, fontWeight: "bold", color: "#2196F3" },
-
-  imageWrapper: {
-    position: "absolute",
-    top: 100,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  doctorImage: {
-    width: "100%",
-    height: 500,
-    resizeMode: "contain",
-  },
-
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: "flex-end",
-    width: "100%",
-  },
+  title: { fontSize: 20, fontWeight: "bold" },
+  subtitle: { fontSize: 20, fontWeight: "bold", color: "#2196F3" },
+  imageWrapper: { position: "absolute", top: 100, left: 0, right: 0, alignItems: "center" },
+  doctorImage: { width: "100%", height: 400, resizeMode: "contain" },
+  scrollContent: { flexGrow: 1, justifyContent: "flex-end" },
   loginCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.92)",
-    width: "100%",
+    backgroundColor: "rgba(255, 255, 255, 0.4)", // Transparan agar blur terlihat
     borderTopLeftRadius: 50,
     borderTopRightRadius: 50,
-    paddingVertical: 70,
-    paddingHorizontal: 25,
+    paddingVertical: 50,
+    paddingHorizontal: 30,
     alignItems: "center",
-    elevation: 4,
+    overflow: "hidden", // Agar isi tidak keluar dari border radius
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.5)",
   },
-  loginTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000",
-    marginBottom: 10,
-    marginTop: -30,
-  },
-
-  label: {
-    alignSelf: "flex-start",
-    marginTop: 10,
-    marginBottom: -10,
-    fontSize: 14,
-    color: "#000",
-  },
+  loginTitle: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  label: { alignSelf: "flex-start", marginTop: 15, fontWeight: "600" },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#448AFF",
+    backgroundColor: "rgba(68, 138, 255, 0.7)",
     borderRadius: 25,
     paddingHorizontal: 15,
-    marginTop: 20,
-    width: "97%",
-    height: 45,
+    marginTop: 8,
+    width: "100%",
+    height: 48,
   },
-  input: {
-    flex: 1,
-    color: "#fff",
-    fontSize: 14,
-  },
-  icon: { marginLeft: 10 },
-
-  loginButton: {
-    backgroundColor: "#448AFF",
-    borderRadius: 25,
-    paddingVertical: 10,
-    paddingHorizontal: 45,
-    marginTop: 20,
-  },
-  loginButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
+  input: { flex: 1, color: "#fff", paddingRight: 10 },
+  loginButton: { backgroundColor: "#2196F3", borderRadius: 25, paddingVertical: 12, paddingHorizontal: 50, marginTop: 30 },
+  loginButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
 });

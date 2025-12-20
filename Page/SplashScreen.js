@@ -11,34 +11,33 @@ export default function SplashScreen() {
         style={styles.headerBar}
       />
 
-      {/* Body */}
+      {/* Body Content */}
       <View style={styles.bodyContent}>
-        {/* Logo + Teks */}
-        <View style={styles.logoContainer}>
-          <Image
-            source={require("../assets/Logo.png")}
-            style={styles.logo}
-          />
-          <View style={styles.textBlock}>
-            <Text style={styles.title}>Ruang</Text>
-            <Text style={styles.subtitle}>Bunda</Text>
+        <View style={styles.mainWrapper}>
+          
+          {/* Sisi Kiri: Ruang Bunda (Ukuran disesuaikan) */}
+          <View style={styles.brandContainer}>
+            <Image
+              source={require("../assets/Logo.png")}
+              style={styles.logoMain}
+            />
+            <View style={styles.textBlock}>
+              <Text style={styles.title}>Ruang</Text>
+              <Text style={styles.subtitle}>Bunda</Text>
+            </View>
           </View>
-        </View>
 
-        {/* Logo Bawah (tanpa jarak ke atas) */}
-        <View style={styles.logoBawah}>
-          <Image
-            source={require("../assets/Kemenkes.png")}
-            style={styles.logoKecil}
-          />
-          <Image
-            source={require("../assets/IBI.png")}
-            style={styles.logoKecil}
-          />
-          <Image
-            source={require("../assets/BMC.png")}
-            style={styles.logoKecil}
-          />
+          {/* Garis Vertikal (Separator) */}
+          <View style={styles.verticalLine} />
+
+          {/* Sisi Kanan: BMC */}
+          <View style={styles.bmcContainer}>
+            <Image
+              source={require("../assets/BMC.png")}
+              style={styles.logoKecil}
+            />
+          </View>
+          
         </View>
       </View>
 
@@ -54,61 +53,74 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffffff",
+    backgroundColor: "#FFFFFF",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "center",
   },
   headerBar: {
     width: "100%",
     height: 140,
-    resizeMode: "cover"
+    resizeMode: "cover",
   },
   bodyContent: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
+    width: "100%",
   },
-  logoContainer: {
+  mainWrapper: {
+    flexDirection: "row", // Sejajar horizontal
+    alignItems: "center",
+    justifyContent: "center",
+    // Padding horizontal agar tidak terlalu mepet pinggir layar
+    paddingHorizontal: 20, 
+  },
+  brandContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 20,
-    marginBottom: -30
+    justifyContent: "flex-end", // Merapatkan ke arah garis tengah
   },
-  logo: {
-    width: 150,
-    height: 150,
+  logoMain: {
+    width: 75, // DIKECILKAN: Agar tidak terlalu dominan
+    height: 75,
     resizeMode: "contain",
-    marginRight: 10
+    marginRight: 8,
   },
   textBlock: {
-    justifyContent: "center"
+    justifyContent: "center",
   },
   title: {
-    fontSize: 36,
+    fontSize: 22, // DIKECILKAN: Menyeimbangkan dengan ikon baru
     fontWeight: "bold",
-    color: "#000000",
-    lineHeight: 38
+    color: "#333333", // Warna hitam yang lebih soft (nyaman di mata)
+    lineHeight: 24,
   },
   subtitle: {
-    fontSize: 36,
+    fontSize: 22, // DIKECILKAN
     fontWeight: "bold",
     color: "#2196F3",
-    lineHeight: 38
+    lineHeight: 24,
   },
-  logoBawah: {
-    flexDirection: "row",
+  verticalLine: {
+    width: 1.5, // Garis dibuat sedikit lebih tipis agar elegan
+    height: 70, // Tinggi disesuaikan dengan elemen di kanan kirinya
+    backgroundColor: "#DDDDDD", // Warna abu-abu muda yang modern
+    marginHorizontal: 20, // Jarak nafas yang pas
+    borderRadius: 1, // Ujung garis sedikit membulat
+  },
+  bmcContainer: {
+    justifyContent: "center",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "flex-start", // Merapatkan ke arah garis tengah
   },
   logoKecil: {
-    width: 50,
-    height: 90,
+    width: 95, // UKURAN PAS: Secara visual seimbang dengan gabungan Ikon+Teks di kiri
+    height: 95,
     resizeMode: "contain",
-    marginHorizontal: 15 
   },
   footerBar: {
     width: "100%",
     height: 140,
-    resizeMode: "cover"
-  }
+    resizeMode: "cover",
+  },
 });
