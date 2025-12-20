@@ -15,7 +15,7 @@ export default function SplashScreen() {
       <View style={styles.bodyContent}>
         <View style={styles.mainWrapper}>
           
-          {/* Sisi Kiri: Ruang Bunda (Ukuran disesuaikan) */}
+          {/* Sisi Kiri: Ruang Bunda */}
           <View style={styles.brandContainer}>
             <Image
               source={require("../assets/Logo.png")}
@@ -69,53 +69,60 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   mainWrapper: {
-    flexDirection: "row", // Sejajar horizontal
+    flexDirection: "row", 
     alignItems: "center",
     justifyContent: "center",
-    // Padding horizontal agar tidak terlalu mepet pinggir layar
-    paddingHorizontal: 20, 
+    width: "100%", 
+    paddingHorizontal: 24, 
   },
+  // --- SISI KIRI ---
   brandContainer: {
+    flex: 1, 
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-end", // Merapatkan ke arah garis tengah
+    justifyContent: "flex-end", 
   },
   logoMain: {
-    width: 75, // DIKECILKAN: Agar tidak terlalu dominan
-    height: 75,
+    width: 60, 
+    height: 60,
     resizeMode: "contain",
-    marginRight: 8,
+    marginRight: 10, 
   },
   textBlock: {
     justifyContent: "center",
+    alignItems: "flex-start", 
   },
   title: {
-    fontSize: 22, // DIKECILKAN: Menyeimbangkan dengan ikon baru
+    fontSize: 20, 
     fontWeight: "bold",
-    color: "#333333", // Warna hitam yang lebih soft (nyaman di mata)
-    lineHeight: 24,
+    color: "#333333",
+    lineHeight: 22,
+    letterSpacing: 0.5, 
   },
   subtitle: {
-    fontSize: 22, // DIKECILKAN
+    fontSize: 20,
     fontWeight: "bold",
     color: "#2196F3",
-    lineHeight: 24,
+    lineHeight: 22,
+    letterSpacing: 0.5,
   },
+  // --- GARIS TENGAH ---
   verticalLine: {
-    width: 1.5, // Garis dibuat sedikit lebih tipis agar elegan
-    height: 70, // Tinggi disesuaikan dengan elemen di kanan kirinya
-    backgroundColor: "#DDDDDD", // Warna abu-abu muda yang modern
-    marginHorizontal: 20, // Jarak nafas yang pas
-    borderRadius: 1, // Ujung garis sedikit membulat
+    width: 1.5,
+    height: 60, 
+    backgroundColor: "#E0E0E0", 
+    marginHorizontal: 24, 
+    borderRadius: 1,
   },
+  // --- SISI KANAN ---
   bmcContainer: {
+    flex: 1, 
     justifyContent: "center",
-    alignItems: "center",
-    justifyContent: "flex-start", // Merapatkan ke arah garis tengah
+    alignItems: "flex-start", 
   },
   logoKecil: {
-    width: 95, // UKURAN PAS: Secara visual seimbang dengan gabungan Ikon+Teks di kiri
-    height: 95,
+    width: 85, 
+    height: 85,
     resizeMode: "contain",
   },
   footerBar: {
